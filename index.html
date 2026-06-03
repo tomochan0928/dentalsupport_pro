@@ -78,9 +78,6 @@
   .mk.xbox { fill: rgba(120,140,155,.35); }
   .mk.xline { stroke: #5a6b78; stroke-width: 4; opacity: .8; }
 
-  .img-loader { display: flex; gap: 8px; align-items: center; margin: 6px 0 10px; }
-  .img-note { font-size: 11px; color: var(--text-soft); }
-
   .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 11px; color: var(--text-soft); justify-content: center; }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
   .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
@@ -198,12 +195,6 @@
     </div>
 
     <h2 class="no-print">🦷 歯列チャート</h2>
-
-    <div class="img-loader no-print">
-      <button class="btn ghost" id="loadImgBtn">🖼 歯列画像を読み込む</button>
-      <input type="file" id="imgFile" accept="image/*" style="display:none" />
-      <span class="img-note">添付の歯列画像を選択（取り込んだ画像は保存データに含まれます）</span>
-    </div>
 
     <div class="chart-wrap">
       <img id="chartImg" alt="歯列表" />
@@ -435,19 +426,11 @@ function readSettingsForm(){
 }
 document.getElementById("applySettings").addEventListener("click", ()=>{ readSettingsForm(); updateProcess(); toast("設定を反映しました"); });
 
-/* ================= 歯列画像の取り込み ================= */
+/* ================= 歯列画像 ================= */
 function setChartImage(dataUrl){
   const img = document.getElementById("chartImg");
   if (dataUrl){ img.src = dataUrl; img.classList.remove("placeholder"); chartImageData = dataUrl; }
 }
-document.getElementById("loadImgBtn").addEventListener("click", ()=> document.getElementById("imgFile").click());
-document.getElementById("imgFile").addEventListener("change", (e)=>{
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => { setChartImage(r.result); localStorage.setItem("dsp_chartimg", r.result); toast("歯列画像を読み込みました"); };
-  r.readAsDataURL(f);
-});
 
 /* ================= 保存・読込 ================= */
 function getPatientId(){ return document.getElementById("patientId").value.trim(); }
@@ -538,10 +521,8 @@ async function pingServer(){ try{ const r=await fetch(`${API_BASE}/api/health`);
 
 /* ================= 初期化 ================= */
 function initChartImage(){
+  // 同梱の tooth-chart.png を表示（無ければプレースホルダ）
   const img = document.getElementById("chartImg");
-  const saved = localStorage.getItem("dsp_chartimg");
-  if (saved){ setChartImage(saved); return; }
-  // 同フォルダの tooth-chart.png を試行、無ければプレースホルダ
   img.onerror = () => { img.removeAttribute("src"); img.classList.add("placeholder"); };
   img.src = DEFAULT_CHART_SRC;
 }

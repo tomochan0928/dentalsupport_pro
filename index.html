@@ -286,14 +286,14 @@ const VBW = 2105, VBH = 699; // overlay viewBox（同梱 tooth-chart.png と同�
 /* 個別の歯画像から合成した各歯の座標（px）。cx/w=中心・幅、top/bot=歯の上下端。
    別の歯列画像に差し替える場合は compose.py で再生成してください。 */
 const TEETH_GEOM = [
-  {id:"U1",a:"U",cx:64.5,w:129.0,top:100.0,bot:328.0,cerv:235.0},{id:"U2",a:"U",cx:210.5,w:151.0,top:50.0,bot:328.0,cerv:215.0},{id:"U3",a:"U",cx:372.5,w:161.0,top:46.0,bot:328.0,cerv:212.0},{id:"U4",a:"U",cx:517.5,w:117.0,top:34.0,bot:328.0,cerv:208.0},
-  {id:"U5",a:"U",cx:639.5,w:115.0,top:40.0,bot:328.0,cerv:212.0},{id:"U6",a:"U",cx:762.0,w:118.0,top:0.0,bot:328.0,cerv:181.0},{id:"U7",a:"U",cx:876.5,w:99.0,top:64.0,bot:328.0,cerv:221.0},{id:"U8",a:"U",cx:990.5,w:117.0,top:28.0,bot:328.0,cerv:198.0},
-  {id:"U9",a:"U",cx:1113.5,w:117.0,top:29.0,bot:328.0,cerv:199.0},{id:"U10",a:"U",cx:1227.5,w:99.0,top:65.0,bot:328.0,cerv:222.0},{id:"U11",a:"U",cx:1342.5,w:119.0,top:2.0,bot:328.0,cerv:182.0},{id:"U12",a:"U",cx:1465.0,w:114.0,top:40.0,bot:328.0,cerv:211.0},
-  {id:"U13",a:"U",cx:1586.5,w:117.0,top:34.0,bot:328.0,cerv:208.0},{id:"U14",a:"U",cx:1732.0,w:162.0,top:45.0,bot:328.0,cerv:212.0},{id:"U15",a:"U",cx:1895.0,w:152.0,top:51.0,bot:328.0,cerv:216.0},{id:"U16",a:"U",cx:2041.0,w:128.0,top:100.0,bot:328.0,cerv:234.0},
-  {id:"L1",a:"L",cx:97.5,w:153.0,top:398.0,bot:627.0,cerv:509.0},{id:"L2",a:"L",cx:264.0,w:168.0,top:398.0,bot:655.0,cerv:517.0},{id:"L3",a:"L",cx:443.0,w:178.0,top:398.0,bot:662.0,cerv:518.0},{id:"L4",a:"L",cx:596.0,w:116.0,top:398.0,bot:661.0,cerv:512.0},
-  {id:"L5",a:"L",cx:711.5,w:103.0,top:398.0,bot:670.0,cerv:507.0},{id:"L6",a:"L",cx:817.5,w:97.0,top:398.0,bot:699.0,cerv:530.0},{id:"L7",a:"L",cx:914.0,w:84.0,top:398.0,bot:669.0,cerv:501.0},{id:"L8",a:"L",cx:1003.5,w:83.0,top:398.0,bot:667.0,cerv:498.0},
-  {id:"L9",a:"L",cx:1092.5,w:83.0,top:398.0,bot:667.0,cerv:498.0},{id:"L10",a:"L",cx:1182.0,w:84.0,top:398.0,bot:669.0,cerv:501.0},{id:"L11",a:"L",cx:1278.0,w:96.0,top:398.0,bot:699.0,cerv:530.0},{id:"L12",a:"L",cx:1384.5,w:105.0,top:398.0,bot:670.0,cerv:507.0},
-  {id:"L13",a:"L",cx:1501.5,w:117.0,top:398.0,bot:661.0,cerv:512.0},{id:"L14",a:"L",cx:1655.0,w:178.0,top:398.0,bot:662.0,cerv:518.0},{id:"L15",a:"L",cx:1837.5,w:175.0,top:398.0,bot:650.0,cerv:516.0},{id:"L16",a:"L",cx:2007.5,w:153.0,top:398.0,bot:627.0,cerv:514.0}
+  {id:"U1",a:"U",cx:64.5,w:129.0,top:100.0,bot:328.0,cerv:235.0,apx:42.0,apy:105.0},{id:"U2",a:"U",cx:210.5,w:151.0,top:50.0,bot:328.0,cerv:215.0,apx:196.5,apy:56.0},{id:"U3",a:"U",cx:372.5,w:161.0,top:46.0,bot:328.0,cerv:212.0,apx:356.5,apy:52.5},{id:"U4",a:"U",cx:517.5,w:117.0,top:34.0,bot:328.0,cerv:208.0,apx:493.0,apy:40.5},
+  {id:"U5",a:"U",cx:639.5,w:115.0,top:40.0,bot:328.0,cerv:212.0,apx:614.5,apy:46.5},{id:"U6",a:"U",cx:762.0,w:118.0,top:0.0,bot:328.0,cerv:181.0,apx:736.5,apy:7.5},{id:"U7",a:"U",cx:876.5,w:99.0,top:64.0,bot:328.0,cerv:221.0,apx:856.0,apy:70.0},{id:"U8",a:"U",cx:990.5,w:117.0,top:28.0,bot:328.0,cerv:198.0,apx:977.5,apy:35.0},
+  {id:"U9",a:"U",cx:1113.5,w:117.0,top:29.0,bot:328.0,cerv:199.0,apx:1125.0,apy:35.5},{id:"U10",a:"U",cx:1227.5,w:99.0,top:65.0,bot:328.0,cerv:222.0,apx:1247.0,apy:71.0},{id:"U11",a:"U",cx:1342.5,w:119.0,top:2.0,bot:328.0,cerv:182.0,apx:1366.5,apy:9.5},{id:"U12",a:"U",cx:1465.0,w:114.0,top:40.0,bot:328.0,cerv:211.0,apx:1488.5,apy:46.5},
+  {id:"U13",a:"U",cx:1586.5,w:117.0,top:34.0,bot:328.0,cerv:208.0,apx:1610.0,apy:40.5},{id:"U14",a:"U",cx:1732.0,w:162.0,top:45.0,bot:328.0,cerv:212.0,apx:1747.0,apy:51.5},{id:"U15",a:"U",cx:1895.0,w:152.0,top:51.0,bot:328.0,cerv:216.0,apx:1908.0,apy:57.0},{id:"U16",a:"U",cx:2041.0,w:128.0,top:100.0,bot:328.0,cerv:234.0,apx:2062.5,apy:105.0},
+  {id:"L1",a:"L",cx:97.5,w:153.0,top:398.0,bot:627.0,cerv:509.0,apx:94.5,apy:621.0},{id:"L2",a:"L",cx:264.0,w:168.0,top:398.0,bot:655.0,cerv:517.0,apx:255.5,apy:648.5},{id:"L3",a:"L",cx:443.0,w:178.0,top:398.0,bot:662.0,cerv:518.0,apx:427.0,apy:655.0},{id:"L4",a:"L",cx:596.0,w:116.0,top:398.0,bot:661.0,cerv:512.0,apx:589.0,apy:654.0},
+  {id:"L5",a:"L",cx:711.5,w:103.0,top:398.0,bot:670.0,cerv:507.0,apx:697.5,apy:663.0},{id:"L6",a:"L",cx:817.5,w:97.0,top:398.0,bot:699.0,cerv:530.0,apx:807.5,apy:691.0},{id:"L7",a:"L",cx:914.0,w:84.0,top:398.0,bot:669.0,cerv:501.0,apx:904.0,apy:662.0},{id:"L8",a:"L",cx:1003.5,w:83.0,top:398.0,bot:667.0,cerv:498.0,apx:999.5,apy:660.0},
+  {id:"L9",a:"L",cx:1092.5,w:83.0,top:398.0,bot:667.0,cerv:498.0,apx:1095.5,apy:660.0},{id:"L10",a:"L",cx:1182.0,w:84.0,top:398.0,bot:669.0,cerv:501.0,apx:1191.5,apy:662.0},{id:"L11",a:"L",cx:1278.0,w:96.0,top:398.0,bot:699.0,cerv:530.0,apx:1287.0,apy:691.0},{id:"L12",a:"L",cx:1384.5,w:105.0,top:398.0,bot:670.0,cerv:507.0,apx:1398.0,apy:663.0},
+  {id:"L13",a:"L",cx:1501.5,w:117.0,top:398.0,bot:661.0,cerv:512.0,apx:1508.0,apy:654.0},{id:"L14",a:"L",cx:1655.0,w:178.0,top:398.0,bot:662.0,cerv:518.0,apx:1670.5,apy:655.0},{id:"L15",a:"L",cx:1837.5,w:175.0,top:398.0,bot:650.0,cerv:516.0,apx:1845.5,apy:643.5},{id:"L16",a:"L",cx:2007.5,w:153.0,top:398.0,bot:627.0,cerv:514.0,apx:2009.5,apy:621.0}
 ];
 const geomById = {}; TEETH_GEOM.forEach(t => geomById[t.id] = t);
 
@@ -303,11 +303,11 @@ function toothMetrics(t) {
   if (t.a === "U") { // 上顎：咬合縁=下(bot)、歯頚線=cerv、根尖=上(top)
     const crownH = t.bot - t.cerv;
     const occ = t.bot - crownH*0.18, buc = t.bot - crownH*0.6;
-    return { hw, H, crownH, occ, buc, apexTip: t.top, ctop: t.cerv, cbot: t.bot, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:true };
+    return { hw, H, crownH, occ, buc, apexX: t.apx, apexY: t.apy, ctop: t.cerv, cbot: t.bot, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:true };
   } else {           // 下顎：咬合縁=上(top)、歯頚線=cerv、根尖=下(bot)
     const crownH = t.cerv - t.top;
     const occ = t.top + crownH*0.18, buc = t.top + crownH*0.6;
-    return { hw, H, crownH, occ, buc, apexTip: t.bot, ctop: t.top, cbot: t.cerv, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:false };
+    return { hw, H, crownH, occ, buc, apexX: t.apx, apexY: t.apy, ctop: t.top, cbot: t.cerv, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:false };
   }
 }
 function initToothData() {
@@ -337,7 +337,7 @@ function buildOverlay() {
     if (apx) {
       const r = Math.max(hw*0.62, 16);
       apexMarks += `<g class="mk part" data-id="${id}" data-mode="${apx.id}">`
-        + `<circle cx="${x}" cy="${m.apexTip}" r="${r}" fill="${apx.color}" fill-opacity="0.32" stroke="${apx.color}" stroke-width="${Math.max(r*0.16,2.5)}" stroke-opacity="0.95"/></g>`;
+        + `<circle cx="${m.apexX}" cy="${m.apexY}" r="${r}" fill="${apx.color}" fill-opacity="0.32" stroke="${apx.color}" stroke-width="${Math.max(r*0.16,2.5)}" stroke-opacity="0.95"/></g>`;
     }
     // 欠損
     marks += `<rect class="mk xbox" data-id="${id}" x="${x-hw*0.98}" y="${hT}" width="${hw*1.96}" height="${hH}" rx="6"/>`;

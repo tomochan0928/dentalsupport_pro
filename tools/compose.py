@@ -64,7 +64,14 @@ def place(items, arch, mode, y_ref):
         central = ai[:, mg:w-mg].sum(axis=1)
         lor, hir = int(h*0.25), int(h*0.80)
         crow = (lor + int(np.argmax(central[lor:hir]))) if hir > lor else h//2
-        geom.append({"a":arch,"i":k+1,"cx":(x+w/2)/W,"top":top/H,"bot":bot/H,"w":w/W,"cerv":(top+crow)/H})
+        # 根尖（根の先端）の位置を検出
+        sy = np.where(sil.any(axis=1))[0]; band = max(3, int(h*0.05))
+        rsel = sy[:band] if mode=="bottom" else sy[-band:]   # 上顎=根が上
+        cols = np.where(sil[rsel].any(axis=0))[0]
+        apx_x = (cols.min()+cols.max())/2 if len(cols) else w/2
+        apx_y = float(rsel.mean())
+        geom.append({"a":arch,"i":k+1,"cx":(x+w/2)/W,"top":top/H,"bot":bot/H,"w":w/W,
+                     "cerv":(top+crow)/H,"apx":(x+apx_x)/W,"apy":(top+apx_y)/H})
         x += w + GAP
 
 place(up,"U","bottom", up_maxh); place(lo,"L","top", up_maxh+ARCH_GAP)
@@ -73,6 +80,6 @@ bg.convert("RGB").save(os.path.join(OUT,"tooth-chart.png"))
 mask.save(os.path.join(OUT,"tooth-mask.png"))
 
 # index.html の TEETH_GEOM 用配列を出力
-rows = [f'{{id:"{g["a"]}{g["i"]}",a:"{g["a"]}",cx:{g["cx"]*W:.1f},w:{g["w"]*W:.1f},top:{g["top"]*H:.1f},bot:{g["bot"]*H:.1f},cerv:{g["cerv"]*H:.1f}}}' for g in geom]
+rows = [f'{{id:"{g["a"]}{g["i"]}",a:"{g["a"]}",cx:{g["cx"]*W:.1f},w:{g["w"]*W:.1f},top:{g["top"]*H:.1f},bot:{g["bot"]*H:.1f},cerv:{g["cerv"]*H:.1f},apx:{g["apx"]*W:.1f},apy:{g["apy"]*H:.1f}}}' for g in geom]
 print(f"// VBW={W}, VBH={H}")
 print("const TEETH_GEOM = [\n" + "\n".join("  "+",".join(rows[i:i+4])+("," if i+4 < len(rows) else "") for i in range(0,len(rows),4)) + "\n];")

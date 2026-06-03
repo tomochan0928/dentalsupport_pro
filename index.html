@@ -62,7 +62,7 @@
   /* ===== 歯列チャート（画像＋SVGオーバーレイ） ===== */
   .chart-wrap { position: relative; width: 100%; max-width: 900px; margin: 0 auto; }
   #chartImg { display: block; width: 100%; height: auto; border-radius: 8px; }
-  #chartImg.placeholder { background: repeating-linear-gradient(45deg,#f3f7fa,#f3f7fa 10px,#fff 10px,#fff 20px); border: 1px dashed #c4d2dc; aspect-ratio: 2.5 / 1; }
+  #chartImg.placeholder { background: repeating-linear-gradient(45deg,#f3f7fa,#f3f7fa 10px,#fff 10px,#fff 20px); border: 1px dashed #c4d2dc; aspect-ratio: 3 / 1; }
   #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
   .hit { fill: transparent; cursor: pointer; }
   .hit:hover { fill: rgba(56,176,214,.14); }
@@ -203,7 +203,7 @@
 
     <div class="chart-wrap">
       <img id="chartImg" alt="歯列表" />
-      <svg id="overlay" viewBox="0 0 1000 380" preserveAspectRatio="none"></svg>
+      <svg id="overlay" viewBox="0 0 2105 699" preserveAspectRatio="none"></svg>
     </div>
 
     <div class="legend" id="legend"></div>
@@ -282,72 +282,73 @@ const catColor   = cat => { const m=modes.find(x=>x.cat===cat); if(!m) return "#
 const escAttr    = s => String(s).replace(/"/g,"&quot;").replace(/</g,"&lt;");
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-const VBW = 1000, VBH = 380; // overlay viewBox（同梱 tooth-chart.png のアスペクト 3046:1156 に一致）
-const TOOTH_CX = {
-  U: [0.0341,0.0923,0.1307,0.1806,0.2485,0.3119,0.3903,0.4668,0.5286,0.5867,0.6369,0.6914,0.7489,0.8185,0.8972,0.9672],
-  L: [0.0420,0.1198,0.2065,0.2800,0.3355,0.3874,0.4350,0.4790,0.5217,0.5653,0.6120,0.6619,0.7150,0.7873,0.8756,0.9576]
-};
-const GEOF = {
-  U: { apex:0.030, buc:0.300, occ:0.405, ht:0.020, hb:0.430, ctop:0.200, cbot:0.430 },
-  L: { apex:0.985, buc:0.730, occ:0.630, ht:0.610, hb:0.995, ctop:0.585, cbot:0.800 }
-};
-function halfWFrac(arr, i) {
-  const d = i === 0 ? arr[1]-arr[0] : i === arr.length-1 ? arr[i]-arr[i-1] : (arr[i+1]-arr[i-1])/2;
-  return d * 0.46;
-}
-function allToothIds() {
-  const ids = [];
-  ["U","L"].forEach(arch => TOOTH_CX[arch].forEach((_,i)=> ids.push(arch+(i+1))));
-  return ids;
+const VBW = 2105, VBH = 699; // overlay viewBox（同梱 tooth-chart.png と同寸）
+/* 個別の歯画像から合成した各歯の座標（px）。cx/w=中心・幅、top/bot=歯の上下端。
+   別の歯列画像に差し替える場合は compose.py で再生成してください。 */
+const TEETH_GEOM = [
+  {id:"U1",a:"U",cx:64.5,w:129.0,top:100.0,bot:328.0},{id:"U2",a:"U",cx:210.5,w:151.0,top:50.0,bot:328.0},{id:"U3",a:"U",cx:372.5,w:161.0,top:46.0,bot:328.0},{id:"U4",a:"U",cx:517.5,w:117.0,top:34.0,bot:328.0},
+  {id:"U5",a:"U",cx:639.5,w:115.0,top:40.0,bot:328.0},{id:"U6",a:"U",cx:762.0,w:118.0,top:0.0,bot:328.0},{id:"U7",a:"U",cx:876.5,w:99.0,top:64.0,bot:328.0},{id:"U8",a:"U",cx:990.5,w:117.0,top:28.0,bot:328.0},
+  {id:"U9",a:"U",cx:1113.5,w:117.0,top:29.0,bot:328.0},{id:"U10",a:"U",cx:1227.5,w:99.0,top:65.0,bot:328.0},{id:"U11",a:"U",cx:1342.5,w:119.0,top:2.0,bot:328.0},{id:"U12",a:"U",cx:1465.0,w:114.0,top:40.0,bot:328.0},
+  {id:"U13",a:"U",cx:1586.5,w:117.0,top:34.0,bot:328.0},{id:"U14",a:"U",cx:1732.0,w:162.0,top:45.0,bot:328.0},{id:"U15",a:"U",cx:1895.0,w:152.0,top:51.0,bot:328.0},{id:"U16",a:"U",cx:2041.0,w:128.0,top:100.0,bot:328.0},
+  {id:"L1",a:"L",cx:97.5,w:153.0,top:398.0,bot:627.0},{id:"L2",a:"L",cx:264.0,w:168.0,top:398.0,bot:655.0},{id:"L3",a:"L",cx:443.0,w:178.0,top:398.0,bot:662.0},{id:"L4",a:"L",cx:596.0,w:116.0,top:398.0,bot:661.0},
+  {id:"L5",a:"L",cx:711.5,w:103.0,top:398.0,bot:670.0},{id:"L6",a:"L",cx:817.5,w:97.0,top:398.0,bot:699.0},{id:"L7",a:"L",cx:914.0,w:84.0,top:398.0,bot:669.0},{id:"L8",a:"L",cx:1003.5,w:83.0,top:398.0,bot:667.0},
+  {id:"L9",a:"L",cx:1092.5,w:83.0,top:398.0,bot:667.0},{id:"L10",a:"L",cx:1182.0,w:84.0,top:398.0,bot:669.0},{id:"L11",a:"L",cx:1278.0,w:96.0,top:398.0,bot:699.0},{id:"L12",a:"L",cx:1384.5,w:105.0,top:398.0,bot:670.0},
+  {id:"L13",a:"L",cx:1501.5,w:117.0,top:398.0,bot:661.0},{id:"L14",a:"L",cx:1655.0,w:178.0,top:398.0,bot:662.0},{id:"L15",a:"L",cx:1837.5,w:175.0,top:398.0,bot:650.0},{id:"L16",a:"L",cx:2007.5,w:153.0,top:398.0,bot:627.0}
+];
+const geomById = {}; TEETH_GEOM.forEach(t => geomById[t.id] = t);
+
+/* 各歯のマーク配置を算出（歯冠は咬合縁側、根尖は反対端） */
+function toothMetrics(t) {
+  const hw = t.w * 0.5, H = t.bot - t.top;
+  const cw = Math.min(t.w * 1.25, H * 0.5); // 歯冠の奥行き
+  if (t.a === "U") { // 上顎：咬合縁=下、根尖=上
+    const occ = t.bot - cw*0.16, buc = t.bot - cw*0.55, apex = t.top + H*0.06;
+    return { hw, H, occ, buc, apex, ctop: t.bot - cw, cbot: t.bot - cw*0.02, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:true };
+  } else {           // 下顎：咬合縁=上、根尖=下
+    const occ = t.top + cw*0.16, buc = t.top + cw*0.55, apex = t.bot - H*0.06;
+    return { hw, H, occ, buc, apex, ctop: t.top + cw*0.02, cbot: t.top + cw, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:false };
+  }
 }
 function initToothData() {
   toothData = {};
-  allToothIds().forEach(id => { toothData[id] = { surf:{O:false,Cm:false,Cd:false,B:false}, marks:{}, state:null }; });
+  TEETH_GEOM.forEach(t => { toothData[t.id] = { surf:{O:false,Cm:false,Cd:false,B:false}, marks:{}, state:null }; });
 }
 
-/* ================= オーバーレイ生成 ================= */
+/* ================= オーバーレイ生成（マークは歯シルエットでクリップ） ================= */
 function buildOverlay() {
   const ov = document.getElementById("overlay");
   const cm  = surfaceMode();
   const apx = apexModes()[0];
-  let svg = "";
-  ["U","L"].forEach(arch => {
-    const g = GEOF[arch];
-    const cxs = TOOTH_CX[arch];
-    for (let i = 0; i < cxs.length; i++) {
-      const id = arch + (i + 1);
-      const x  = cxs[i] * VBW;
-      const hw = halfWFrac(cxs, i) * VBW;
-      const occY = g.occ*VBH, bucY = g.buc*VBH, apexY = g.apex*VBH;
-      const hT = g.ht*VBH, hH = (g.hb-g.ht)*VBH;
-      const cT = g.ctop*VBH, cH = (g.cbot-g.ctop)*VBH;
-      const bnd = ((g.occ+g.buc)/2)*VBH;       // 中央ゾーンの咬合/頬側 境界
-      const occLower = g.occ > g.buc;          // 上顎は咬合面が下側
-      // 歯全体着色（描画時に色設定）
-      svg += `<rect class="mk whole" data-id="${id}" x="${x-hw*0.92}" y="${cT}" width="${hw*1.84}" height="${cH}" rx="7"/>`;
-      // 部位マーク（う蝕）：部位ごとに丸い色マーク。色は cm.colors
-      if (cm) {
-        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="O" style="fill:${cm.colors.occlusal};opacity:.74" cx="${x}" cy="${occY}" rx="${hw*0.5}" ry="${VBH*0.044}"/>`;
-        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="B" style="fill:${cm.colors.buccal};opacity:.72" cx="${x}" cy="${bucY}" rx="${hw*0.4}" ry="${VBH*0.05}"/>`;
-        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="Cm" style="fill:${cm.colors.adjacent};opacity:.8" cx="${x-hw*0.98}" cy="${bnd}" rx="${hw*0.17}" ry="${VBH*0.055}"/>`;
-        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="Cd" style="fill:${cm.colors.adjacent};opacity:.8" cx="${x+hw*0.98}" cy="${bnd}" rx="${hw*0.17}" ry="${VBH*0.055}"/>`;
-      }
-      // 根尖マーク
-      if (apx) svg += `<g class="mk part" data-id="${id}" data-mode="${apx.id}" style="fill:${apx.color}"><circle cx="${x}" cy="${apexY}" r="${VBH*0.026}" stroke="#fff" stroke-width="2"/></g>`;
-      // 欠損
-      svg += `<rect class="mk xbox" data-id="${id}" x="${x-hw*0.9}" y="${hT}" width="${hw*1.8}" height="${hH}" rx="6"/>`;
-      svg += `<line class="mk xline" data-id="${id}" x1="${x-hw*0.7}" y1="${hT+hH*0.2}" x2="${x+hw*0.7}" y2="${hT+hH*0.8}"/>`;
-      svg += `<line class="mk xline" data-id="${id}" x1="${x+hw*0.7}" y1="${hT+hH*0.2}" x2="${x-hw*0.7}" y2="${hT+hH*0.8}"/>`;
-      // クリックゾーン（部位指定用）：近心(左)・遠心(右)・中央=咬合/頬側
-      const occTop = occLower ? bnd : hT, occH = occLower ? (hT+hH-bnd) : (bnd-hT);
-      const bucTop = occLower ? hT : bnd, bucH = occLower ? (bnd-hT) : (hT+hH-bnd);
-      svg += `<rect class="hit" data-id="${id}" data-surface="Cm" x="${x-hw}" y="${hT}" width="${hw*0.56}" height="${hH}"/>`;
-      svg += `<rect class="hit" data-id="${id}" data-surface="Cd" x="${x+hw*0.44}" y="${hT}" width="${hw*0.56}" height="${hH}"/>`;
-      svg += `<rect class="hit" data-id="${id}" data-surface="O" x="${x-hw*0.44}" y="${occTop}" width="${hw*0.88}" height="${occH}"/>`;
-      svg += `<rect class="hit" data-id="${id}" data-surface="B" x="${x-hw*0.44}" y="${bucTop}" width="${hw*0.88}" height="${bucH}"/>`;
+  let marks = "", hits = "";
+  TEETH_GEOM.forEach(t => {
+    const id = t.id, x = t.cx, m = toothMetrics(t), hw = m.hw;
+    const hT = m.ht, hH = m.hb - m.ht;
+    // 歯全体着色
+    marks += `<rect class="mk whole" data-id="${id}" x="${x-hw*0.96}" y="${m.ctop}" width="${hw*1.92}" height="${m.cbot-m.ctop}" rx="8"/>`;
+    // 部位マーク（う蝕）
+    if (cm) {
+      marks += `<ellipse class="mk surf" data-id="${id}" data-surface="O"  style="fill:${cm.colors.occlusal};opacity:.74" cx="${x}" cy="${m.occ}" rx="${hw*0.5}" ry="${m.H*0.05}"/>`;
+      marks += `<ellipse class="mk surf" data-id="${id}" data-surface="B"  style="fill:${cm.colors.buccal};opacity:.72" cx="${x}" cy="${m.buc}" rx="${hw*0.42}" ry="${m.H*0.055}"/>`;
+      marks += `<ellipse class="mk surf" data-id="${id}" data-surface="Cm" style="fill:${cm.colors.adjacent};opacity:.82" cx="${x-hw*0.92}" cy="${m.bnd}" rx="${hw*0.2}" ry="${m.H*0.06}"/>`;
+      marks += `<ellipse class="mk surf" data-id="${id}" data-surface="Cd" style="fill:${cm.colors.adjacent};opacity:.82" cx="${x+hw*0.92}" cy="${m.bnd}" rx="${hw*0.2}" ry="${m.H*0.06}"/>`;
     }
+    if (apx) marks += `<g class="mk part" data-id="${id}" data-mode="${apx.id}" style="fill:${apx.color}"><circle cx="${x}" cy="${m.apex}" r="${hw*0.34}" stroke="#fff" stroke-width="3"/></g>`;
+    // 欠損
+    marks += `<rect class="mk xbox" data-id="${id}" x="${x-hw*0.96}" y="${hT}" width="${hw*1.92}" height="${hH}" rx="6"/>`;
+    marks += `<line class="mk xline" data-id="${id}" x1="${x-hw*0.7}" y1="${hT+hH*0.18}" x2="${x+hw*0.7}" y2="${hT+hH*0.82}"/>`;
+    marks += `<line class="mk xline" data-id="${id}" x1="${x+hw*0.7}" y1="${hT+hH*0.18}" x2="${x-hw*0.7}" y2="${hT+hH*0.82}"/>`;
+    // クリックゾーン（部位指定）
+    const occTop = m.occLower ? m.bnd : hT, occH = m.occLower ? (m.hb-m.bnd) : (m.bnd-hT);
+    const bucTop = m.occLower ? hT : m.bnd, bucH = m.occLower ? (m.bnd-hT) : (m.hb-m.bnd);
+    hits += `<rect class="hit" data-id="${id}" data-surface="Cm" x="${x-hw}" y="${hT}" width="${hw*0.5}" height="${hH}"/>`;
+    hits += `<rect class="hit" data-id="${id}" data-surface="Cd" x="${x+hw*0.5}" y="${hT}" width="${hw*0.5}" height="${hH}"/>`;
+    hits += `<rect class="hit" data-id="${id}" data-surface="O"  x="${x-hw*0.5}" y="${occTop}" width="${hw}" height="${occH}"/>`;
+    hits += `<rect class="hit" data-id="${id}" data-surface="B"  x="${x-hw*0.5}" y="${bucTop}" width="${hw}" height="${bucH}"/>`;
   });
-  ov.innerHTML = svg;
+  ov.innerHTML =
+    `<defs><mask id="toothmask" maskUnits="userSpaceOnUse" x="0" y="0" width="${VBW}" height="${VBH}">`
+    + `<image href="tooth-mask.png" x="0" y="0" width="${VBW}" height="${VBH}" preserveAspectRatio="none"/></mask></defs>`
+    + `<g mask="url(#toothmask)">${marks}</g>${hits}`;
   ov.querySelectorAll(".hit").forEach(el => el.addEventListener("click", () => onToothClick(el.dataset.id, el.dataset.surface)));
 }
 

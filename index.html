@@ -96,6 +96,7 @@
   .plan-row { border: 1px solid var(--line); border-radius: 8px; padding: 8px; margin-bottom: 8px; background: #fff; }
   .plan-row .pr-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; margin-bottom: 5px; }
   .plan-row .pr-head .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .plan-row .pr-head input.pl-name { flex: 1; min-width: 60px; padding: 4px 7px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); border-radius: 6px; }
   .plan-row .pr-head label.lnk { margin-left: auto; font-weight: 400; font-size: 11px; color: var(--text-soft); display: flex; align-items: center; gap: 4px; cursor: pointer; }
   .plan-row.off { opacity: .5; }
   .plan-row textarea { min-height: 50px; font-size: 12px; }
@@ -232,8 +233,10 @@
       </div>
 
       <div class="seg">
-        <div class="seg-title">治療工程の設定</div>
-        <p class="hint">「工程表に連動」をONにすると、その項目がついた歯数 × 回数を総治療回数へ加算します。工程は1行＝1ステップ。</p>
+        <div class="seg-title">治療工程の設定
+          <button class="btn ghost" id="addProcBtn" style="padding:5px 9px;font-size:12px;">＋ 工程を追加</button>
+        </div>
+        <p class="hint">「＋ 工程を追加」で歯に紐づく処置を追加（操作モードにも追加され、歯にマークすると本数×回数が反映）。「工程表に連動」ONで総回数へ加算。工程は1行＝1ステップ。</p>
         <div id="planEditor"></div>
       </div>
     </div>
@@ -506,10 +509,14 @@ function renderModeEditor() {
 function renderPlanEditor() {
   document.getElementById("planEditor").innerHTML = orderedCats().map(cat => {
     const p = plan[cat]; if (!p) return "";
+    const single = modes.filter(x => x.cat === cat).length === 1; // 単一モード=名称編集可
+    const nameHtml = single
+      ? `<input class="pl-name" data-k="catlabel" value="${escAttr(p.label)}">`
+      : `<span style="font-weight:700;font-size:12.5px;">${escapeHtml(p.label)}</span>`;
     return `
     <div class="plan-row ${p.linked?'':'off'}" data-cat="${cat}">
       <div class="pr-head">
-        <span class="sw" style="background:${catColor(cat)}"></span>${escapeHtml(p.label)}
+        <span class="sw" style="background:${catColor(cat)}"></span>${nameHtml}
         <label class="lnk"><input type="checkbox" data-k="linked" ${p.linked?'checked':''}> 工程表に連動</label>
       </div>
       <textarea data-k="steps" placeholder="1行＝1ステップ">${escapeHtml((p.steps||[]).join("\n"))}</textarea>
@@ -550,11 +557,25 @@ document.getElementById("addModeBtn").addEventListener("click", () => {
 });
 document.getElementById("planEditor").addEventListener("input", (e) => {
   const row = e.target.closest(".plan-row"); if (!row) return;
-  const p = plan[row.dataset.cat]; const k = e.target.dataset.k;
+  const cat = row.dataset.cat, p = plan[cat]; const k = e.target.dataset.k;
   if (k === "linked") { p.linked = e.target.checked; row.classList.toggle("off", !p.linked); }
   else if (k === "steps") { p.steps = e.target.value.split("\n").map(s=>s.trim()).filter(Boolean); }
   else if (k === "visits") { p.visits = Number(e.target.value)||0; }
+  else if (k === "catlabel") { // 工程名（=モード名）を編集。planEditorは再描画せずフォーカス維持
+    p.label = e.target.value;
+    const owners = modes.filter(x => x.cat === cat);
+    if (owners.length === 1) owners[0].label = e.target.value;
+    renderModeButtons(); renderLegend(); renderModeEditor();
+  }
   updateProcess();
+});
+// 治療工程（歯に紐づく処置）を追加：操作モードにも追加される
+document.getElementById("addProcBtn").addEventListener("click", () => {
+  const id = "p" + Date.now().toString(36);
+  const palette = ["#e67e22","#16a085","#9b59b6","#2980b9","#c0392b","#d35400","#27ae60","#2c3e50"];
+  modes.push({ id, label:"新規処置", color:palette[modes.length % palette.length], type:"whole", cat:id, locked:false });
+  plan[id] = { label:"新規処置", steps:["1.処置"], visits:1, linked:true };
+  renderModeEditor(); renderPlanEditor(); refreshModeUI(); updateProcess();
 });
 
 /* ================= 医院共通設定（保存・読込） ================= */

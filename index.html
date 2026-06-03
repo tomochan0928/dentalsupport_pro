@@ -325,12 +325,12 @@ function buildOverlay() {
       const occLower = g.occ > g.buc;          // 上顎は咬合面が下側
       // 歯全体着色（描画時に色設定）
       svg += `<rect class="mk whole" data-id="${id}" x="${x-hw*0.92}" y="${cT}" width="${hw*1.84}" height="${cH}" rx="7"/>`;
-      // 部位マーク（う蝕）色は cm.colors
+      // 部位マーク（う蝕）：部位ごとに丸い色マーク。色は cm.colors
       if (cm) {
-        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="O" style="fill:${cm.colors.occlusal};opacity:.72" cx="${x}" cy="${occY}" rx="${hw*0.6}" ry="${VBH*0.026}"/>`;
-        svg += `<rect class="mk surf" data-id="${id}" data-surface="B" style="fill:${cm.colors.buccal};opacity:.6" x="${x-hw*0.5}" y="${bucY-VBH*0.05}" width="${hw}" height="${VBH*0.10}" rx="5"/>`;
-        svg += `<rect class="mk surf" data-id="${id}" data-surface="Cm" style="fill:${cm.colors.adjacent};opacity:.7" x="${x-hw*1.02}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`;
-        svg += `<rect class="mk surf" data-id="${id}" data-surface="Cd" style="fill:${cm.colors.adjacent};opacity:.7" x="${x+hw*0.74}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`;
+        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="O" style="fill:${cm.colors.occlusal};opacity:.74" cx="${x}" cy="${occY}" rx="${hw*0.5}" ry="${VBH*0.044}"/>`;
+        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="B" style="fill:${cm.colors.buccal};opacity:.72" cx="${x}" cy="${bucY}" rx="${hw*0.4}" ry="${VBH*0.05}"/>`;
+        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="Cm" style="fill:${cm.colors.adjacent};opacity:.8" cx="${x-hw*0.98}" cy="${bnd}" rx="${hw*0.17}" ry="${VBH*0.055}"/>`;
+        svg += `<ellipse class="mk surf" data-id="${id}" data-surface="Cd" style="fill:${cm.colors.adjacent};opacity:.8" cx="${x+hw*0.98}" cy="${bnd}" rx="${hw*0.17}" ry="${VBH*0.055}"/>`;
       }
       // 根尖マーク
       if (apx) svg += `<g class="mk part" data-id="${id}" data-mode="${apx.id}" style="fill:${apx.color}"><circle cx="${x}" cy="${apexY}" r="${VBH*0.026}" stroke="#fff" stroke-width="2"/></g>`;

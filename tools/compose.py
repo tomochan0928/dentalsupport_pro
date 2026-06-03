@@ -81,7 +81,7 @@ bg = Image.new("RGBA",(W,H),(255,255,255,255)); bg.alpha_composite(chart)
 # ===== 歯式番号（Palmer 1〜8）・中央線・R/L をチャートに焼き込み =====
 from PIL import ImageDraw, ImageFont
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-try: fnum = ImageFont.truetype(FONT, 48); frl = ImageFont.truetype(FONT, 38)
+try: fnum = ImageFont.truetype(FONT, 48); frl = ImageFont.truetype(FONT, 64)
 except Exception: fnum = ImageFont.load_default(); frl = fnum
 draw = ImageDraw.Draw(bg)
 GRAY = (88,100,112,255); LGRAY = (175,188,200,255)
@@ -97,7 +97,7 @@ yL = up_maxh + ARCH_GAP - 46      # 下顎番号（咬合縁の少し上）
 for g in gU: put(g["cx"]*W, yU, str(palmer(g["i"]-1)), fnum, GRAY)
 for g in gL: put(g["cx"]*W, yL, str(palmer(g["i"]-1)), fnum, GRAY)
 # 患者の左右（R=患者右=画面左, L=患者左=画面右）
-put(26, (yU+yL)/2, "R", frl, GRAY); put(W-26, (yU+yL)/2, "L", frl, GRAY)
+put(40, (yU+yL)/2, "R", frl, GRAY); put(W-40, (yU+yL)/2, "L", frl, GRAY)
 
 bg.convert("RGB").save(os.path.join(OUT,"tooth-chart.png"))
 mask.save(os.path.join(OUT,"tooth-mask.png"))

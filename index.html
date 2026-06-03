@@ -207,7 +207,7 @@
 
     <div class="chart-wrap">
       <img id="chartImg" alt="歯列表" />
-      <svg id="overlay" viewBox="0 0 1000 400" preserveAspectRatio="none"></svg>
+      <svg id="overlay" viewBox="0 0 1000 380" preserveAspectRatio="none"></svg>
     </div>
 
     <div class="legend">
@@ -282,40 +282,54 @@ let toothData = {};
 let chartImageData = null; // 取り込んだ歯列画像(DataURL)
 
 const TEETH = 16; // 片顎16本
-const VBW = 1000, VBH = 400; // overlay viewBox
+const VBW = 1000, VBH = 380; // overlay viewBox（同梱 tooth-chart.png のアスペクト 3046:1156 に一致）
 
-/* 各歯の中心X（viewBox座標）。前歯〜臼歯まで概ね等間隔で配置 */
-function toothCenterX(i) { return Math.round((0.035 + i * (0.93 / (TEETH - 1))) * VBW); }
-
-/* 上顎・下顎それぞれの縦位置（viewBox座標, 画像内の割合×VBH） */
-const GEO = {
-  U: { hitTop: VBH*0.04, hitH: VBH*0.40, occY: VBH*0.40, bucY: VBH*0.30, apexY: VBH*0.07 },
-  L: { hitTop: VBH*0.58, hitH: VBH*0.40, occY: VBH*0.60, bucY: VBH*0.70, apexY: VBH*0.94 }
+/* 同梱 tooth-chart.png を画像解析して得た各歯の中心X（画像幅に対する割合）。
+   別レイアウトの歯列画像に差し替える場合は、この配列と下の GEOF を調整してください。 */
+const TOOTH_CX = {
+  U: [0.0341,0.0923,0.1307,0.1806,0.2485,0.3119,0.3903,0.4668,0.5286,0.5867,0.6369,0.6914,0.7489,0.8185,0.8972,0.9672],
+  L: [0.0420,0.1198,0.2065,0.2800,0.3355,0.3874,0.4350,0.4790,0.5217,0.5653,0.6120,0.6619,0.7150,0.7873,0.8756,0.9576]
 };
+/* 縦位置（画像高さに対する割合）：apex=根尖, buc=頬側中央, occ=咬合/切縁, ht/hb=歯の上端/下端 */
+const GEOF = {
+  U: { apex:0.030, buc:0.300, occ:0.405, ht:0.020, hb:0.430 },
+  L: { apex:0.985, buc:0.730, occ:0.630, ht:0.610, hb:0.995 }
+};
+
+/* 隣接間隔から各歯の半幅（割合）を算出 */
+function halfWFrac(arr, i) {
+  const d = i === 0 ? arr[1]-arr[0]
+          : i === arr.length-1 ? arr[i]-arr[i-1]
+          : (arr[i+1]-arr[i-1])/2;
+  return d * 0.46;
+}
 
 /* ================= オーバーレイ生成 ================= */
 function buildOverlay() {
   const ov = document.getElementById("overlay");
   let svg = "";
   ["U","L"].forEach(arch => {
-    const g = GEO[arch];
-    for (let i = 0; i < TEETH; i++) {
+    const g = GEOF[arch];
+    const cxs = TOOTH_CX[arch];
+    for (let i = 0; i < cxs.length; i++) {
       const id = arch + (i + 1);
       toothData[id] = { O:false, C:false, B:false, A:false, missing:false };
-      const x = toothCenterX(i);
-      const halfW = (0.93 / (TEETH - 1)) * VBW * 0.46;
+      const x  = cxs[i] * VBW;
+      const hw = halfWFrac(cxs, i) * VBW;
+      const occY = g.occ*VBH, bucY = g.buc*VBH, apexY = g.apex*VBH;
+      const hT = g.ht*VBH, hH = (g.hb-g.ht)*VBH;
       // マーク（半透明色）
-      const o = `<ellipse class="mk o" data-id="${id}" cx="${x}" cy="${g.occY}" rx="${halfW*0.62}" ry="${VBH*0.028}"/>`;
-      const b = `<rect class="mk b" data-id="${id}" x="${x-halfW*0.5}" y="${g.bucY-VBH*0.05}" width="${halfW}" height="${VBH*0.10}" rx="5"/>`;
-      const cL = `<rect class="mk c" data-id="${id}" x="${x-halfW*1.02}" y="${g.bucY-VBH*0.075}" width="${halfW*0.28}" height="${VBH*0.16}" rx="3"/>`;
-      const cR = `<rect class="mk c" data-id="${id}" x="${x+halfW*0.74}" y="${g.bucY-VBH*0.075}" width="${halfW*0.28}" height="${VBH*0.16}" rx="3"/>`;
-      const a = `<circle class="mk a" data-id="${id}" cx="${x}" cy="${g.apexY}" r="${VBH*0.045}"/>`;
+      const o = `<ellipse class="mk o" data-id="${id}" cx="${x}" cy="${occY}" rx="${hw*0.6}" ry="${VBH*0.026}"/>`;
+      const b = `<rect class="mk b" data-id="${id}" x="${x-hw*0.5}" y="${bucY-VBH*0.05}" width="${hw}" height="${VBH*0.10}" rx="5"/>`;
+      const cL = `<rect class="mk c" data-id="${id}" x="${x-hw*1.02}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`;
+      const cR = `<rect class="mk c" data-id="${id}" x="${x+hw*0.74}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`;
+      const a = `<circle class="mk a" data-id="${id}" cx="${x}" cy="${apexY}" r="${VBH*0.026}"/>`;
       // 欠損（×＋ボックス）
-      const xbox = `<rect class="mk xbox" data-id="${id}" x="${x-halfW*0.9}" y="${g.hitTop}" width="${halfW*1.8}" height="${g.hitH}" rx="6"/>`;
-      const xl1 = `<line class="mk xline" data-id="${id}" x1="${x-halfW*0.7}" y1="${g.hitTop+g.hitH*0.2}" x2="${x+halfW*0.7}" y2="${g.hitTop+g.hitH*0.8}"/>`;
-      const xl2 = `<line class="mk xline" data-id="${id}" x1="${x+halfW*0.7}" y1="${g.hitTop+g.hitH*0.2}" x2="${x-halfW*0.7}" y2="${g.hitTop+g.hitH*0.8}"/>`;
+      const xbox = `<rect class="mk xbox" data-id="${id}" x="${x-hw*0.9}" y="${hT}" width="${hw*1.8}" height="${hH}" rx="6"/>`;
+      const xl1 = `<line class="mk xline" data-id="${id}" x1="${x-hw*0.7}" y1="${hT+hH*0.2}" x2="${x+hw*0.7}" y2="${hT+hH*0.8}"/>`;
+      const xl2 = `<line class="mk xline" data-id="${id}" x1="${x+hw*0.7}" y1="${hT+hH*0.2}" x2="${x-hw*0.7}" y2="${hT+hH*0.8}"/>`;
       // クリック領域（最前面）
-      const hit = `<rect class="hit" data-id="${id}" x="${x-halfW*0.95}" y="${g.hitTop}" width="${halfW*1.9}" height="${g.hitH}"/>`;
+      const hit = `<rect class="hit" data-id="${id}" x="${x-hw*0.95}" y="${hT}" width="${hw*1.9}" height="${hH}"/>`;
       svg += xbox + b + cL + cR + o + a + xl1 + xl2 + hit;
     }
   });

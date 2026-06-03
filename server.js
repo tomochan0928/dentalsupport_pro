@@ -48,6 +48,34 @@ const server = http.createServer((req, res) => {
     return sendJson(res, 200, { ok: true, time: new Date().toISOString() });
   }
 
+  // 医院共通設定（操作モード・治療工程）保存
+  if (req.method === "POST" && pathname === "/api/settings") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; if (body.length > 5e6) req.destroy(); });
+    req.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        fs.writeFileSync(path.join(DATA_DIR, "_clinic.json"), JSON.stringify(data, null, 2), "utf-8");
+        return sendJson(res, 200, { ok: true });
+      } catch (e) {
+        return sendJson(res, 400, { ok: false, error: "invalid JSON" });
+      }
+    });
+    return;
+  }
+
+  // 医院共通設定 読込
+  if (req.method === "GET" && pathname === "/api/settings") {
+    const file = path.join(DATA_DIR, "_clinic.json");
+    if (!fs.existsSync(file)) return sendJson(res, 404, { ok: false, error: "not found" });
+    try {
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      return res.end(fs.readFileSync(file, "utf-8"));
+    } catch (e) {
+      return sendJson(res, 500, { ok: false, error: "read error" });
+    }
+  }
+
   // 保存
   if (req.method === "POST" && pathname === "/api/save") {
     let body = "";

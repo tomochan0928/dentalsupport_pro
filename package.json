@@ -1,0 +1,10 @@
+{
+  "name": "dentalsupport-pro",
+  "version": "1.0.0",
+  "description": "歯科医院チェアサイドで患者説明に使う歯列チャート＆治療工程表ツール（院内LAN・単一HTML＋ローカルサーバー）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}

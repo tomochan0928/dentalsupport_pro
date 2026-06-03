@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>DentalSupport Pro - チェアサイド患者説明ツール</title>
+<style>
+  /* ===== 基本テーマ（白・水色・グレー） ===== */
+  :root {
+    --bg: #eef4f8;
+    --panel: #ffffff;
+    --line: #d6e2ea;
+    --accent: #38b0d6;       /* 水色 */
+    --accent-dark: #2a8bab;
+    --text: #2e3a44;
+    --text-soft: #6c7c89;
+    --tooth: #ffffff;
+    --tooth-line: #9fb3c0;
+    --red: #e6443a;          /* 咬合面 O */
+    --orange: #f59331;       /* 隣接面 C */
+    --yellow: #f5d623;       /* 頬側面 B */
+    --lesion: #d8221a;       /* 根尖病巣 A */
+    --shadow: 0 2px 10px rgba(40,90,120,.08);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ===== ヘッダー ===== */
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 18px;
+    background: linear-gradient(120deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    box-shadow: var(--shadow);
+  }
+  header .logo { font-weight: 700; font-size: 18px; letter-spacing: .5px; }
+  header .logo small { font-weight: 400; opacity: .85; font-size: 12px; margin-left: 6px; }
+  header .status { margin-left: auto; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #cfe9f2; }
+  .dot.online { background: #7ff0a8; box-shadow: 0 0 6px #7ff0a8; }
+  .dot.offline { background: #ffd36b; box-shadow: 0 0 6px #ffd36b; }
+
+  /* ===== 3カラムレイアウト ===== */
+  .layout {
+    display: grid;
+    grid-template-columns: 290px 1fr 320px;
+    gap: 14px;
+    padding: 14px;
+    align-items: start;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+  }
+  .panel h2 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: var(--accent-dark);
+    border-bottom: 2px solid var(--line);
+    padding-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .panel h3 { font-size: 13px; margin: 14px 0 6px; color: var(--text-soft); }
+
+  label.fld { display: block; font-size: 12px; color: var(--text-soft); margin: 8px 0 3px; }
+  input[type=text], input[type=number] {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 14px; color: var(--text); background: #fbfdff;
+  }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,176,214,.15); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 12px; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: #fff; background: var(--accent);
+    transition: filter .15s, transform .05s;
+  }
+  .btn:hover { filter: brightness(1.05); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: #fff; color: var(--accent-dark); border: 1px solid var(--accent); }
+  .btn.gray { background: #8597a4; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* ===== モードボタン ===== */
+  .modes { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+  .mode-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 9px;
+    background: #fbfdff; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text);
+    transition: all .15s;
+  }
+  .mode-btn:hover { border-color: var(--accent); }
+  .mode-btn.active { border-color: var(--accent); background: #e9f7fc; box-shadow: inset 0 0 0 1px var(--accent); }
+  .swatch { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,.15); flex: none; }
+  .swatch.o { background: var(--red); }
+  .swatch.c { background: var(--orange); }
+  .swatch.b { background: var(--yellow); }
+  .swatch.a { background: var(--lesion); border-radius: 50%; }
+  .swatch.x { background: repeating-linear-gradient(45deg,#cdd9e1,#cdd9e1 4px,#fff 4px,#fff 8px); }
+
+  /* ===== 治療工程表（左） ===== */
+  #procList { margin-top: 6px; }
+  .proc-card {
+    border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; margin-bottom: 8px;
+    background: #fbfdff;
+  }
+  .proc-card .pc-head { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 13px; }
+  .proc-card .pc-count { font-size: 11px; color: #fff; background: var(--accent); padding: 2px 8px; border-radius: 20px; }
+  .proc-card ol { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: var(--text-soft); }
+  .proc-card ol li { margin: 2px 0; }
+  .proc-empty { color: var(--text-soft); font-size: 12px; padding: 10px; text-align: center; }
+  .total-box {
+    margin-top: 6px; padding: 12px; border-radius: 10px; text-align: center;
+    background: linear-gradient(120deg, var(--accent), var(--accent-dark)); color: #fff;
+  }
+  .total-box .num { font-size: 30px; font-weight: 800; line-height: 1; }
+  .total-box .lbl { font-size: 11px; opacity: .9; }
+
+  /* ===== 歯列エリア（中央） ===== */
+  .arch-wrap { overflow-x: auto; }
+  .arch {
+    display: grid; grid-template-columns: repeat(16, minmax(0,1fr));
+    gap: 4px; padding: 6px 2px; min-width: 720px;
+  }
+  .arch-label { text-align: center; font-size: 11px; color: var(--text-soft); margin: 4px 0; letter-spacing: 3px; }
+
+  /* 1本の歯（上顎：根が上） */
+  .tooth { position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center; user-select: none; }
+  .tooth .num { font-size: 9px; color: var(--text-soft); margin-bottom: 1px; }
+
+  /* 根（root）と根尖病巣 A */
+  .root {
+    width: 56%; height: 30px; background: var(--tooth);
+    border: 1.4px solid var(--tooth-line); border-top: none;
+    border-radius: 0 0 45% 45% / 0 0 90% 90%;
+    position: relative;
+  }
+  .lesion-mark {
+    position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
+    width: 16px; height: 16px; border-radius: 50%; background: var(--lesion);
+    box-shadow: 0 0 0 2px #fff, 0 0 6px rgba(216,34,26,.6);
+    display: none;
+  }
+  .tooth.lesion .lesion-mark { display: block; }
+
+  /* 歯冠（crown）：B/C/O のパーツ */
+  .crown {
+    width: 100%; aspect-ratio: 1 / 1; max-height: 60px;
+    border: 1.6px solid var(--tooth-line); background: var(--tooth);
+    border-radius: 38% 38% 30% 30% / 50% 50% 30% 30%;
+    overflow: hidden; position: relative;
+    display: grid;
+    grid-template-rows: 30% 40% 30%;
+    grid-template-columns: 25% 50% 25%;
+    grid-template-areas: "b b b" "cl o cr" "bl ob br";
+  }
+  .surf { transition: background .12s; }
+  .surf.b  { grid-area: b;  background: transparent; }
+  .surf.cl { grid-area: cl; background: transparent; }
+  .surf.cr { grid-area: cr; background: transparent; }
+  .surf.o  { grid-area: o;  background: transparent; border-radius: 4px; }
+  /* 着色状態 */
+  .crown.O .surf.o  { background: var(--red); }
+  .crown.B .surf.b  { background: var(--yellow); }
+  .crown.C .surf.cl,
+  .crown.C .surf.cr { background: var(--orange); }
+
+  /* 下顎：根を下にする（行を反転） */
+  .tooth.lower { flex-direction: column-reverse; }
+  .tooth.lower .root { border-radius: 45% 45% 0 0 / 90% 90% 0 0; border-top: 1.4px solid var(--tooth-line); border-bottom: none; }
+  .tooth.lower .lesion-mark { bottom: auto; top: -4px; }
+  .tooth.lower .crown { border-radius: 30% 30% 38% 38% / 30% 30% 50% 50%; }
+
+  /* 欠損 */
+  .tooth.missing .crown, .tooth.missing .root { visibility: hidden; }
+  .tooth.missing::after {
+    content: "欠損"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 10px; color: #b9c6d0; border: 1px dashed #c4d2dc; padding: 1px 4px; border-radius: 4px;
+    background: repeating-linear-gradient(45deg,#f3f7fa,#f3f7fa 4px,#fff 4px,#fff 8px);
+  }
+  .tooth:hover .crown { box-shadow: 0 0 0 2px var(--accent); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 11px; color: var(--text-soft); justify-content: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  /* ===== 設定パネル（右） ===== */
+  .settings-body { display: none; }
+  .settings-body.open { display: block; }
+  .set-group { border: 1px solid var(--line); border-radius: 9px; padding: 10px; margin-bottom: 10px; background: #fbfdff; }
+  .set-group .sg-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; color: var(--text); }
+  .toggle-set { width: 100%; }
+  textarea {
+    width: 100%; min-height: 78px; resize: vertical; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-family: inherit;
+    color: var(--text); background: #fff; line-height: 1.6;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,176,214,.15); }
+  .hint { font-size: 11px; color: var(--text-soft); margin: 2px 0 0; }
+  .small-row { display: flex; gap: 8px; align-items: center; }
+  .small-row .num-fld { width: 80px; }
+
+  /* トースト */
+  #toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #2e3a44; color: #fff; padding: 11px 20px; border-radius: 10px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 50; box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err { background: #c0392b; }
+
+  /* レスポンシブ */
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .arch { min-width: 680px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🦷 DentalSupport&nbsp;Pro <small>チェアサイド患者説明ツール</small></div>
+  <div class="status">
+    <span class="dot" id="connDot"></span>
+    <span id="connText">サーバー未接続</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ============ 左：コントロールパネル ============ -->
+  <aside class="panel" id="leftPanel">
+    <h2>🗂 患者・操作</h2>
+
+    <label class="fld" for="patientId">患者番号</label>
+    <input type="text" id="patientId" placeholder="例: 000123" autocomplete="off" />
+
+    <div class="btn-row">
+      <button class="btn" id="saveBtn">💾 保存</button>
+      <button class="btn ghost" id="loadBtn">📥 読込</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn gray" id="clearBtn">🧹 全クリア</button>
+    </div>
+
+    <h3>操作モード</h3>
+    <div class="modes" id="modeButtons">
+      <button class="mode-btn active" data-mode="O"><span class="swatch o"></span>咬合面（O）</button>
+      <button class="mode-btn" data-mode="C"><span class="swatch c"></span>隣接面（C）</button>
+      <button class="mode-btn" data-mode="B"><span class="swatch b"></span>頬側面（B）</button>
+      <button class="mode-btn" data-mode="A"><span class="swatch a"></span>根尖性歯周炎（A）</button>
+      <button class="mode-btn" data-mode="X"><span class="swatch x"></span>欠損（削除）</button>
+    </div>
+
+    <h2 style="margin-top:18px;">📋 治療工程表</h2>
+    <div id="procList"></div>
+    <div class="total-box">
+      <div class="num" id="totalVisits">0</div>
+      <div class="lbl">目安 総治療回数（回）</div>
+    </div>
+  </aside>
+
+  <!-- ============ 中央：歯列イラスト ============ -->
+  <main class="panel">
+    <h2>🦷 歯列チャート（上顎16・下顎16）</h2>
+    <div class="arch-label">上顎 UPPER（右 ⟶ 左）</div>
+    <div class="arch-wrap">
+      <div class="arch" id="archUpper"></div>
+    </div>
+    <div class="arch-wrap">
+      <div class="arch" id="archLower"></div>
+    </div>
+    <div class="arch-label">下顎 LOWER（右 ⟶ 左）</div>
+
+    <div class="legend">
+      <span><i style="background:var(--red)"></i>咬合面(O)</span>
+      <span><i style="background:var(--orange)"></i>隣接面(C)</span>
+      <span><i style="background:var(--yellow)"></i>頬側面(B)</span>
+      <span><i style="background:var(--lesion);border-radius:50%"></i>根尖病巣(A)</span>
+      <span><i style="background:repeating-linear-gradient(45deg,#cdd9e1,#cdd9e1 4px,#fff 4px,#fff 8px)"></i>欠損</span>
+    </div>
+  </main>
+
+  <!-- ============ 右：工程表カスタマイズ ============ -->
+  <aside class="panel" id="rightPanel">
+    <h2>⚙️ 工程表カスタマイズ設定</h2>
+    <button class="btn ghost toggle-set" id="toggleSettings">設定を開く ▼</button>
+
+    <div class="settings-body" id="settingsBody">
+      <p class="hint">各工程は1行＝1ステップで入力してください。回数を変更すると工程表計算に即時反映されます。</p>
+
+      <div class="set-group">
+        <div class="sg-title">🦷 虫歯（O / C / B）</div>
+        <label class="fld">治療工程（1行1ステップ）</label>
+        <textarea data-cond="caries-steps"></textarea>
+        <div class="small-row" style="margin-top:6px;">
+          <label class="fld" style="margin:0;">目安回数</label>
+          <input type="number" min="0" class="num-fld" data-cond="caries-visits" />
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="sg-title">🔴 根尖性歯周炎（A）</div>
+        <label class="fld">治療工程（1行1ステップ）</label>
+        <textarea data-cond="periapical-steps" style="min-height:120px;"></textarea>
+        <div class="small-row" style="margin-top:6px;">
+          <label class="fld" style="margin:0;">目安回数</label>
+          <input type="number" min="0" class="num-fld" data-cond="periapical-visits" />
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="sg-title">⬜ 欠損（補綴）</div>
+        <label class="fld">治療工程（1行1ステップ）</label>
+        <textarea data-cond="defect-steps"></textarea>
+        <div class="small-row" style="margin-top:6px;">
+          <label class="fld" style="margin:0;">目安回数</label>
+          <input type="number" min="0" class="num-fld" data-cond="defect-visits" />
+        </div>
+      </div>
+
+      <button class="btn" id="applySettings" style="width:100%;">設定を反映</button>
+    </div>
+  </aside>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ================= 設定 ================= */
+const API_BASE = ""; // 同一オリジンのローカルサーバーを想定（例: http://192.168.x.x:3000）
+
+/* 初期工程表データ（カスタマイズ可能） */
+const DEFAULT_SETTINGS = {
+  caries:    { steps: ["1.う蝕除去", "2.型取り", "3.セット"], visits: 2, label: "虫歯（O/C/B）", color: "var(--red)" },
+  periapical:{ steps: ["1.感染根管処置", "2.根管貼薬(複数回)", "3.根管充填", "4.支台築造", "5.窩洞準備・印象", "6.クラウンセット"], visits: 5, label: "根尖性歯周炎（A）", color: "var(--lesion)" },
+  defect:    { steps: ["1.欠損補綴カウンセリング（ブリッジ/インプラント/義歯選定）"], visits: 1, label: "欠損補綴", color: "#8597a4" }
+};
+
+let settings = structuredClone(DEFAULT_SETTINGS);
+let currentMode = "O";
+/* 歯の状態: { O:bool, C:bool, B:bool, A:bool, missing:bool } */
+let toothData = {};
+
+const TEETH_PER_ARCH = 16;
+
+/* ================= 歯列生成 ================= */
+function buildArch(containerId, idPrefix, isLower) {
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = "";
+  for (let i = 1; i <= TEETH_PER_ARCH; i++) {
+    const id = idPrefix + i;
+    toothData[id] = { O:false, C:false, B:false, A:false, missing:false };
+    const tooth = document.createElement("div");
+    tooth.className = "tooth" + (isLower ? " lower" : "");
+    tooth.dataset.id = id;
+    tooth.innerHTML = `
+      <div class="num">${isLower ? "L" : "U"}${i}</div>
+      <div class="crown">
+        <div class="surf b"></div>
+        <div class="surf cl"></div>
+        <div class="surf o"></div>
+        <div class="surf cr"></div>
+        <div class="surf cl" style="grid-area:bl;"></div>
+        <div class="surf o"  style="grid-area:ob;background:transparent;"></div>
+        <div class="surf cr" style="grid-area:br;"></div>
+      </div>
+      <div class="root"><div class="lesion-mark"></div></div>
+    `;
+    tooth.addEventListener("click", () => onToothClick(id));
+    cont.appendChild(tooth);
+  }
+}
+
+function getToothEl(id) {
+  return document.querySelector(`.tooth[data-id="${id}"]`);
+}
+
+/* ================= 歯クリック処理 ================= */
+function onToothClick(id) {
+  const d = toothData[id];
+  switch (currentMode) {
+    case "O": d.O = !d.O; break;
+    case "C": d.C = !d.C; break;
+    case "B": d.B = !d.B; break;
+    case "A": d.A = !d.A; break;
+    case "X": d.missing = !d.missing; break;
+  }
+  renderTooth(id);
+  updateProcess();
+}
+
+function renderTooth(id) {
+  const el = getToothEl(id);
+  const d = toothData[id];
+  const crown = el.querySelector(".crown");
+  crown.classList.toggle("O", d.O);
+  crown.classList.toggle("C", d.C);
+  crown.classList.toggle("B", d.B);
+  el.classList.toggle("lesion", d.A);
+  el.classList.toggle("missing", d.missing);
+}
+
+function renderAllTeeth() {
+  Object.keys(toothData).forEach(renderTooth);
+}
+
+/* ================= モード切替 ================= */
+document.getElementById("modeButtons").addEventListener("click", (e) => {
+  const btn = e.target.closest(".mode-btn");
+  if (!btn) return;
+  currentMode = btn.dataset.mode;
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b === btn));
+});
+
+/* ================= 治療工程表の自動連動 ================= */
+function updateProcess() {
+  // 各疾患に該当する歯をカウント
+  let caries = 0, periapical = 0, defect = 0;
+  Object.values(toothData).forEach(d => {
+    if (d.missing) { defect++; return; }          // 欠損は補綴としてカウント
+    if (d.O || d.C || d.B) caries++;              // 1本に複数面でも1本=1治療コース
+    if (d.A) periapical++;
+  });
+
+  const procList = document.getElementById("procList");
+  procList.innerHTML = "";
+  let total = 0;
+
+  const addCard = (cfg, count) => {
+    if (count <= 0) return;
+    const visits = (Number(cfg.visits) || 0) * count;
+    total += visits;
+    const stepsHtml = cfg.steps.map(s => `<li>${escapeHtml(s)}</li>`).join("");
+    const card = document.createElement("div");
+    card.className = "proc-card";
+    card.innerHTML = `
+      <div class="pc-head">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <i style="width:10px;height:10px;border-radius:3px;background:${cfg.color};display:inline-block;"></i>
+          ${escapeHtml(cfg.label)} <span style="color:var(--text-soft);font-weight:400;">×${count}本</span>
+        </span>
+        <span class="pc-count">${visits}回</span>
+      </div>
+      <ol>${stepsHtml}</ol>`;
+    procList.appendChild(card);
+  };
+
+  addCard(settings.caries, caries);
+  addCard(settings.periapical, periapical);
+  addCard(settings.defect, defect);
+
+  if (procList.children.length === 0) {
+    procList.innerHTML = `<div class="proc-empty">歯をタップすると治療工程が表示されます。</div>`;
+  }
+  document.getElementById("totalVisits").textContent = total;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+/* ================= 設定パネル ================= */
+const settingsBody = document.getElementById("settingsBody");
+document.getElementById("toggleSettings").addEventListener("click", function () {
+  const open = settingsBody.classList.toggle("open");
+  this.textContent = open ? "設定を閉じる ▲" : "設定を開く ▼";
+});
+
+function fillSettingsForm() {
+  document.querySelector('[data-cond="caries-steps"]').value = settings.caries.steps.join("\n");
+  document.querySelector('[data-cond="caries-visits"]').value = settings.caries.visits;
+  document.querySelector('[data-cond="periapical-steps"]').value = settings.periapical.steps.join("\n");
+  document.querySelector('[data-cond="periapical-visits"]').value = settings.periapical.visits;
+  document.querySelector('[data-cond="defect-steps"]').value = settings.defect.steps.join("\n");
+  document.querySelector('[data-cond="defect-visits"]').value = settings.defect.visits;
+}
+
+function readSettingsForm() {
+  const parseSteps = (sel) => document.querySelector(sel).value.split("\n").map(s => s.trim()).filter(Boolean);
+  settings.caries.steps     = parseSteps('[data-cond="caries-steps"]');
+  settings.caries.visits    = Number(document.querySelector('[data-cond="caries-visits"]').value) || 0;
+  settings.periapical.steps = parseSteps('[data-cond="periapical-steps"]');
+  settings.periapical.visits= Number(document.querySelector('[data-cond="periapical-visits"]').value) || 0;
+  settings.defect.steps     = parseSteps('[data-cond="defect-steps"]');
+  settings.defect.visits    = Number(document.querySelector('[data-cond="defect-visits"]').value) || 0;
+}
+
+document.getElementById("applySettings").addEventListener("click", () => {
+  readSettingsForm();
+  updateProcess();
+  toast("設定を反映しました");
+});
+
+/* ================= 保存・読込（API + localStorage フォールバック） ================= */
+function getPatientId() {
+  const id = document.getElementById("patientId").value.trim();
+  return id;
+}
+
+async function saveData() {
+  const patientId = getPatientId();
+  if (!patientId) { toast("患者番号を入力してください", true); return; }
+  readSettingsForm();
+  const payload = { patientId, toothData, settings, savedAt: new Date().toISOString() };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    setConn(true);
+    // 成功時もローカルにバックアップ
+    localStorage.setItem("dsp_" + patientId, JSON.stringify(payload));
+    toast(`サーバーに保存しました（患者 ${patientId}）`);
+  } catch (err) {
+    setConn(false);
+    localStorage.setItem("dsp_" + patientId, JSON.stringify(payload));
+    toast("サーバー接続不可：ローカルに保存しました", true);
+  }
+}
+
+async function loadData() {
+  const patientId = getPatientId();
+  if (!patientId) { toast("患者番号を入力してください", true); return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/load/${encodeURIComponent(patientId)}`);
+    setConn(true);
+    if (res.status === 404) { resetAll(); toast(`新規患者（${patientId}）：初期状態にしました`); return; }
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data || !data.toothData) { resetAll(); toast(`新規患者（${patientId}）：初期状態にしました`); return; }
+    applyLoaded(data);
+    toast(`サーバーから読込みました（患者 ${patientId}）`);
+  } catch (err) {
+    setConn(false);
+    const backup = localStorage.getItem("dsp_" + patientId);
+    if (backup) {
+      applyLoaded(JSON.parse(backup));
+      toast("サーバー接続不可：ローカルから復元しました", true);
+    } else {
+      resetAll();
+      toast("データなし：初期状態にしました", true);
+    }
+  }
+}
+
+function applyLoaded(data) {
+  // 歯の状態を反映（未知のキーは無視、欠けは初期化）
+  Object.keys(toothData).forEach(id => {
+    const d = data.toothData[id];
+    toothData[id] = d ? { O:!!d.O, C:!!d.C, B:!!d.B, A:!!d.A, missing:!!d.missing }
+                      : { O:false, C:false, B:false, A:false, missing:false };
+  });
+  if (data.settings) {
+    // 既存構造を保ちつつ steps/visits を上書き
+    ["caries","periapical","defect"].forEach(k => {
+      if (data.settings[k]) {
+        settings[k].steps  = Array.isArray(data.settings[k].steps) ? data.settings[k].steps : settings[k].steps;
+        settings[k].visits = Number(data.settings[k].visits) || 0;
+      }
+    });
+  }
+  fillSettingsForm();
+  renderAllTeeth();
+  updateProcess();
+}
+
+function resetAll() {
+  Object.keys(toothData).forEach(id => {
+    toothData[id] = { O:false, C:false, B:false, A:false, missing:false };
+  });
+  settings = structuredClone(DEFAULT_SETTINGS);
+  fillSettingsForm();
+  renderAllTeeth();
+  updateProcess();
+}
+
+document.getElementById("saveBtn").addEventListener("click", saveData);
+document.getElementById("loadBtn").addEventListener("click", loadData);
+document.getElementById("clearBtn").addEventListener("click", () => { resetAll(); toast("歯列を全クリアしました"); });
+
+/* ================= 接続状態 / トースト ================= */
+function setConn(online) {
+  const dot = document.getElementById("connDot");
+  const txt = document.getElementById("connText");
+  dot.className = "dot " + (online ? "online" : "offline");
+  txt.textContent = online ? "サーバー接続中" : "オフライン（ローカル保存）";
+}
+
+let toastTimer;
+function toast(msg, isErr) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show" + (isErr ? " err" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ""; }, 2600);
+}
+
+/* サーバー疎通チェック（任意） */
+async function pingServer() {
+  try {
+    const res = await fetch(`${API_BASE}/api/health`, { method: "GET" });
+    setConn(res.ok);
+  } catch { setConn(false); }
+}
+
+/* ================= 初期化 ================= */
+buildArch("archUpper", "U", false);
+buildArch("archLower", "L", true);
+fillSettingsForm();
+updateProcess();
+pingServer();
+</script>
+</body>
+</html>

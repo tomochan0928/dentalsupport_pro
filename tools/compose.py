@@ -36,7 +36,7 @@ def silhouette(im):
 
 # 上顎=1..16（患者右→左）。下顎は標準チャート配置に合わせ反転（32..17）で患者右を画面左に。
 UPPER, LOWER = list(range(1,17)), list(range(32,16,-1))
-GAP, ARCH_GAP = 6, 80
+GAP, ARCH_GAP = 6, 150
 
 def prep(nums, root_up):
     out = []
@@ -81,7 +81,7 @@ bg = Image.new("RGBA",(W,H),(255,255,255,255)); bg.alpha_composite(chart)
 # ===== 歯式番号（Palmer 1〜8）・中央線・R/L をチャートに焼き込み =====
 from PIL import ImageDraw, ImageFont
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-try: fnum = ImageFont.truetype(FONT, 30); frl = ImageFont.truetype(FONT, 26)
+try: fnum = ImageFont.truetype(FONT, 48); frl = ImageFont.truetype(FONT, 38)
 except Exception: fnum = ImageFont.load_default(); frl = fnum
 draw = ImageDraw.Draw(bg)
 GRAY = (88,100,112,255); LGRAY = (175,188,200,255)
@@ -92,8 +92,8 @@ mx = (gU[7]["cx"]+gU[8]["cx"])/2 * W
 draw.line([(mx,4),(mx,H-4)], fill=LGRAY, width=2)
 def put(cx_px, cy_px, s, font, fill):
     b = draw.textbbox((0,0), s, font=font); draw.text((cx_px-(b[2]-b[0])/2, cy_px-(b[3]-b[1])/2-b[1]), s, fill=fill, font=font)
-yU = up_maxh + 22                 # 上顎番号（咬合縁の少し下＝歯間ギャップ内）
-yL = up_maxh + ARCH_GAP - 22      # 下顎番号（咬合縁の少し上）
+yU = up_maxh + 46                 # 上顎番号（咬合縁の少し下＝歯間ギャップ内）
+yL = up_maxh + ARCH_GAP - 46      # 下顎番号（咬合縁の少し上）
 for g in gU: put(g["cx"]*W, yU, str(palmer(g["i"]-1)), fnum, GRAY)
 for g in gL: put(g["cx"]*W, yL, str(palmer(g["i"]-1)), fnum, GRAY)
 # 患者の左右（R=患者右=画面左, L=患者左=画面右）

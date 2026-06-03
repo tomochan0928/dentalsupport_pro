@@ -80,15 +80,18 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // 静的ファイル（index.html）
-  if (req.method === "GET" && (pathname === "/" || pathname === "/index.html")) {
-    const file = path.join(__dirname, "index.html");
-    fs.readFile(file, (err, buf) => {
-      if (err) { res.writeHead(404); return res.end("index.html not found"); }
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      res.end(buf);
-    });
-    return;
+  // 静的ファイル（index.html / 画像など）
+  if (req.method === "GET") {
+    const rel = (pathname === "/" || pathname === "/index.html") ? "index.html" : decodeURIComponent(pathname.replace(/^\/+/, ""));
+    // パストラバーサル防止
+    if (rel.includes("..")) { res.writeHead(403); return res.end("Forbidden"); }
+    const file = path.join(__dirname, rel);
+    const types = { ".html":"text/html; charset=utf-8", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".webp":"image/webp", ".svg":"image/svg+xml", ".css":"text/css", ".js":"text/javascript" };
+    const ext = path.extname(file).toLowerCase();
+    if (types[ext] && fs.existsSync(file) && fs.statSync(file).isFile()) {
+      res.writeHead(200, { "Content-Type": types[ext] });
+      return res.end(fs.readFileSync(file));
+    }
   }
 
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });

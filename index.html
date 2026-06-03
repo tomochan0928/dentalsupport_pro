@@ -77,6 +77,7 @@
   .mk.a { fill: var(--lesion); stroke: #fff; stroke-width: 2; opacity: .9; }
   .mk.xbox { fill: rgba(120,140,155,.35); }
   .mk.xline { stroke: #5a6b78; stroke-width: 4; opacity: .8; }
+  .mk.whole { opacity: .40; }
 
   .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 11px; color: var(--text-soft); justify-content: center; }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
@@ -90,6 +91,25 @@
   .hint { font-size: 11px; color: var(--text-soft); margin: 2px 0 0; }
   .small-row { display: flex; gap: 8px; align-items: center; }
   .small-row .num-fld { width: 80px; }
+
+  /* モード編集・工程設定 */
+  .seg { border: 1px solid var(--line); border-radius: 9px; padding: 10px; margin-bottom: 10px; background: #fbfdff; }
+  .seg .seg-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .mode-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .mode-row input[type=color] { width: 34px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; flex: none; }
+  .mode-row input[type=text] { flex: 1; padding: 6px 8px; font-size: 13px; }
+  .mode-row .tag { font-size: 10px; color: var(--text-soft); background: #eef4f8; border: 1px solid var(--line); border-radius: 10px; padding: 1px 7px; white-space: nowrap; flex: none; }
+  .mode-row .del { border: none; background: #f6e3e3; color: #c0392b; border-radius: 6px; width: 28px; height: 30px; cursor: pointer; font-size: 13px; flex: none; }
+  .mode-row .del:disabled { background: #eef1f3; color: #c2cdd4; cursor: default; }
+  .plan-row { border: 1px solid var(--line); border-radius: 8px; padding: 8px; margin-bottom: 8px; background: #fff; }
+  .plan-row .pr-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; margin-bottom: 5px; }
+  .plan-row .pr-head .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .plan-row .pr-head label.lnk { margin-left: auto; font-weight: 400; font-size: 11px; color: var(--text-soft); display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .plan-row.off { opacity: .5; }
+  .plan-row textarea { min-height: 50px; font-size: 12px; }
+  .plan-row .vrow { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 11px; color: var(--text-soft); }
+  .plan-row .vrow input { width: 64px; }
+  .nonlinked { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
 
   #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: #2e3a44; color: #fff; padding: 11px 20px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 50; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -160,13 +180,7 @@
       </div>
 
       <h3>操作モード</h3>
-      <div class="modes" id="modeButtons">
-        <button class="mode-btn active" data-mode="O"><span class="swatch o"></span>咬合面（O）</button>
-        <button class="mode-btn" data-mode="C"><span class="swatch c"></span>隣接面（C）</button>
-        <button class="mode-btn" data-mode="B"><span class="swatch b"></span>頬側面（B）</button>
-        <button class="mode-btn" data-mode="A"><span class="swatch a"></span>根尖性歯周炎（A）</button>
-        <button class="mode-btn" data-mode="X"><span class="swatch x"></span>欠損（削除）</button>
-      </div>
+      <div class="modes" id="modeButtons"></div>
     </div>
 
     <!-- 印刷用：治療計画（印刷時に歯列の下へ回り込ませるため main 内にも複製は持たず、ここを印刷で見せる） -->
@@ -201,13 +215,7 @@
       <svg id="overlay" viewBox="0 0 1000 380" preserveAspectRatio="none"></svg>
     </div>
 
-    <div class="legend">
-      <span><i style="background:var(--red)"></i>咬合面(O)</span>
-      <span><i style="background:var(--orange)"></i>隣接面(C)</span>
-      <span><i style="background:var(--yellow)"></i>頬側面(B)</span>
-      <span><i style="background:var(--lesion);border-radius:50%"></i>根尖病巣(A)</span>
-      <span><i style="background:#9fb3c0"></i>欠損</span>
-    </div>
+    <div class="legend" id="legend"></div>
   </main>
 
   <!-- ============ 右：工程表カスタマイズ ============ -->
@@ -216,39 +224,19 @@
     <button class="btn ghost" id="toggleSettings" style="width:100%;">設定を開く ▼</button>
 
     <div class="settings-body" id="settingsBody">
-      <p class="hint">各工程は1行＝1ステップで入力。回数を変えると工程表に即時反映されます。</p>
-
-      <div class="set-group">
-        <div class="sg-title">🦷 虫歯（O / C / B）</div>
-        <label class="fld">治療工程（1行1ステップ）</label>
-        <textarea data-cond="caries-steps"></textarea>
-        <div class="small-row" style="margin-top:6px;">
-          <label class="fld" style="margin:0;">目安回数</label>
-          <input type="number" min="0" class="num-fld" data-cond="caries-visits" />
+      <div class="seg">
+        <div class="seg-title">操作モードの編集
+          <button class="btn ghost" id="addModeBtn" style="padding:5px 9px;font-size:12px;">＋ モード追加</button>
         </div>
+        <p class="hint">色と名称を変更できます。追加したモードは「歯全体を着色」タイプです。🗑で削除（既定5モードは削除不可）。</p>
+        <div id="modeEditor"></div>
       </div>
 
-      <div class="set-group">
-        <div class="sg-title">🔴 根尖性歯周炎（A）</div>
-        <label class="fld">治療工程（1行1ステップ）</label>
-        <textarea data-cond="periapical-steps" style="min-height:120px;"></textarea>
-        <div class="small-row" style="margin-top:6px;">
-          <label class="fld" style="margin:0;">目安回数</label>
-          <input type="number" min="0" class="num-fld" data-cond="periapical-visits" />
-        </div>
+      <div class="seg">
+        <div class="seg-title">治療工程の設定</div>
+        <p class="hint">「工程表に連動」をONにすると、その項目がついた歯数 × 回数を総治療回数へ加算します。工程は1行＝1ステップ。</p>
+        <div id="planEditor"></div>
       </div>
-
-      <div class="set-group">
-        <div class="sg-title">⬜ 欠損（補綴）</div>
-        <label class="fld">治療工程（1行1ステップ）</label>
-        <textarea data-cond="defect-steps"></textarea>
-        <div class="small-row" style="margin-top:6px;">
-          <label class="fld" style="margin:0;">目安回数</label>
-          <input type="number" min="0" class="num-fld" data-cond="defect-visits" />
-        </div>
-      </div>
-
-      <button class="btn" id="applySettings" style="width:100%;">設定を反映</button>
     </div>
   </aside>
 
@@ -261,16 +249,40 @@
 const API_BASE = "";
 const DEFAULT_CHART_SRC = "tooth-chart.png"; // 同フォルダに置けば自動表示
 
-const DEFAULT_SETTINGS = {
-  caries:    { steps: ["1.う蝕除去","2.型取り","3.セット"], visits: 2, label: "虫歯（O/C/B）", color: "var(--red)" },
-  periapical:{ steps: ["1.感染根管処置","2.根管貼薬(複数回)","3.根管充填","4.支台築造","5.窩洞準備・印象","6.クラウンセット"], visits: 5, label: "根尖性歯周炎（A）", color: "var(--lesion)" },
-  defect:    { steps: ["1.欠損補綴カウンセリング（ブリッジ/インプラント/義歯選定）"], visits: 1, label: "欠損補綴", color: "#8597a4" }
+/* 操作モード（編集・追加可能）
+   type: occlusal/adjacent/buccal/apex=部位マーク, whole=歯全体を着色, missing=欠損(非表示扱い)
+   cat : 治療工程カテゴリ。同一catのモードは1本につき1治療としてまとめて計上 */
+const PART_TYPES = ["occlusal","adjacent","buccal","apex"];
+const DEFAULT_MODES = [
+  { id:"O", label:"咬合面（O）", color:"#e6443a", type:"occlusal", cat:"caries",     locked:true },
+  { id:"C", label:"隣接面（C）", color:"#f59331", type:"adjacent", cat:"caries",     locked:true },
+  { id:"B", label:"頬側面（B）", color:"#f5d623", type:"buccal",   cat:"caries",     locked:true },
+  { id:"A", label:"根尖性歯周炎（A）", color:"#d8221a", type:"apex", cat:"periapical", locked:true },
+  { id:"X", label:"欠損（削除）", color:"#8597a4", type:"missing", cat:"defect",      locked:true },
+  { id:"done",   label:"治療済み(充填/CR)",      color:"#5aa46a", type:"whole", cat:"done",   locked:false },
+  { id:"prosth", label:"補綴(クラウン/ブリッジ)", color:"#8e7cf0", type:"whole", cat:"prosth", locked:false },
+  { id:"watch",  label:"要観察(CO/初期う蝕)",    color:"#3fb6dd", type:"whole", cat:"watch",  locked:false }
+];
+const DEFAULT_PLAN = {
+  caries:     { label:"虫歯（O/C/B）",        steps:["1.う蝕除去","2.型取り","3.セット"], visits:2, linked:true },
+  periapical: { label:"根尖性歯周炎（A）",    steps:["1.感染根管処置","2.根管貼薬(複数回)","3.根管充填","4.支台築造","5.窩洞準備・印象","6.クラウンセット"], visits:5, linked:true },
+  defect:     { label:"欠損補綴",             steps:["1.欠損補綴カウンセリング（ブリッジ/インプラント/義歯選定）"], visits:1, linked:true },
+  done:       { label:"治療済み(充填/CR)",     steps:[], visits:0, linked:false },
+  prosth:     { label:"補綴(クラウン/ブリッジ)", steps:["1.支台形成","2.印象","3.セット"], visits:3, linked:true },
+  watch:      { label:"要観察(CO/初期う蝕)",   steps:["1.経過観察・ブラッシング指導"], visits:1, linked:false }
 };
 
-let settings = structuredClone(DEFAULT_SETTINGS);
+let modes = structuredClone(DEFAULT_MODES);
+let plan  = structuredClone(DEFAULT_PLAN);
 let currentMode = "O";
 let toothData = {};
 let chartImageData = null; // 取り込んだ歯列画像(DataURL)
+
+const modeById = id => modes.find(m => m.id === id);
+const partModes = () => modes.filter(m => PART_TYPES.includes(m.type));
+const orderedCats = () => { const seen=[]; modes.forEach(m=>{ if(!seen.includes(m.cat)) seen.push(m.cat); }); return seen; };
+const catColor = cat => { const m = modes.find(x=>x.cat===cat); return m ? m.color : "#8597a4"; };
+const escAttr = s => String(s).replace(/"/g,"&quot;").replace(/</g,"&lt;");
 
 const TEETH = 16; // 片顎16本
 const VBW = 1000, VBH = 380; // overlay viewBox（同梱 tooth-chart.png のアスペクト 3046:1156 に一致）
@@ -283,8 +295,8 @@ const TOOTH_CX = {
 };
 /* 縦位置（画像高さに対する割合）：apex=根尖, buc=頬側中央, occ=咬合/切縁, ht/hb=歯の上端/下端 */
 const GEOF = {
-  U: { apex:0.030, buc:0.300, occ:0.405, ht:0.020, hb:0.430 },
-  L: { apex:0.985, buc:0.730, occ:0.630, ht:0.610, hb:0.995 }
+  U: { apex:0.030, buc:0.300, occ:0.405, ht:0.020, hb:0.430, ctop:0.200, cbot:0.430 },
+  L: { apex:0.985, buc:0.730, occ:0.630, ht:0.610, hb:0.995, ctop:0.585, cbot:0.800 }
 };
 
 /* 隣接間隔から各歯の半幅（割合）を算出 */
@@ -295,33 +307,50 @@ function halfWFrac(arr, i) {
   return d * 0.46;
 }
 
-/* ================= オーバーレイ生成 ================= */
+/* 全歯のID一覧／歯データ初期化 */
+function allToothIds() {
+  const ids = [];
+  ["U","L"].forEach(arch => TOOTH_CX[arch].forEach((_,i)=> ids.push(arch+(i+1))));
+  return ids;
+}
+function initToothData() {
+  toothData = {};
+  allToothIds().forEach(id => { toothData[id] = { marks:{}, state:null }; });
+}
+
+/* ================= オーバーレイ生成（部位マーク＋歯全体着色＋欠損） ================= */
 function buildOverlay() {
   const ov = document.getElementById("overlay");
+  const occM = modes.find(m=>m.type==="occlusal");
+  const adjM = modes.find(m=>m.type==="adjacent");
+  const bucM = modes.find(m=>m.type==="buccal");
+  const apxM = modes.find(m=>m.type==="apex");
   let svg = "";
   ["U","L"].forEach(arch => {
     const g = GEOF[arch];
     const cxs = TOOTH_CX[arch];
     for (let i = 0; i < cxs.length; i++) {
       const id = arch + (i + 1);
-      toothData[id] = { O:false, C:false, B:false, A:false, missing:false };
       const x  = cxs[i] * VBW;
       const hw = halfWFrac(cxs, i) * VBW;
       const occY = g.occ*VBH, bucY = g.buc*VBH, apexY = g.apex*VBH;
       const hT = g.ht*VBH, hH = (g.hb-g.ht)*VBH;
-      // マーク（半透明色）
-      const o = `<ellipse class="mk o" data-id="${id}" cx="${x}" cy="${occY}" rx="${hw*0.6}" ry="${VBH*0.026}"/>`;
-      const b = `<rect class="mk b" data-id="${id}" x="${x-hw*0.5}" y="${bucY-VBH*0.05}" width="${hw}" height="${VBH*0.10}" rx="5"/>`;
-      const cL = `<rect class="mk c" data-id="${id}" x="${x-hw*1.02}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`;
-      const cR = `<rect class="mk c" data-id="${id}" x="${x+hw*0.74}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`;
-      const a = `<circle class="mk a" data-id="${id}" cx="${x}" cy="${apexY}" r="${VBH*0.026}"/>`;
+      const cT = g.ctop*VBH, cH = (g.cbot-g.ctop)*VBH;
+      const pm = (m, frag) => m ? `<g class="mk part" data-id="${id}" data-mode="${m.id}" style="fill:${m.color}">${frag}</g>` : "";
+      // 歯全体着色（色は描画時に設定）
+      const whole = `<rect class="mk whole" data-id="${id}" x="${x-hw*0.92}" y="${cT}" width="${hw*1.84}" height="${cH}" rx="7"/>`;
+      // 部位マーク
+      const o = pm(occM, `<ellipse cx="${x}" cy="${occY}" rx="${hw*0.6}" ry="${VBH*0.026}"/>`);
+      const b = pm(bucM, `<rect x="${x-hw*0.5}" y="${bucY-VBH*0.05}" width="${hw}" height="${VBH*0.10}" rx="5"/>`);
+      const c = pm(adjM, `<rect x="${x-hw*1.02}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`
+                       + `<rect x="${x+hw*0.74}" y="${bucY-VBH*0.075}" width="${hw*0.28}" height="${VBH*0.16}" rx="3"/>`);
+      const a = pm(apxM, `<circle cx="${x}" cy="${apexY}" r="${VBH*0.026}" stroke="#fff" stroke-width="2"/>`);
       // 欠損（×＋ボックス）
       const xbox = `<rect class="mk xbox" data-id="${id}" x="${x-hw*0.9}" y="${hT}" width="${hw*1.8}" height="${hH}" rx="6"/>`;
       const xl1 = `<line class="mk xline" data-id="${id}" x1="${x-hw*0.7}" y1="${hT+hH*0.2}" x2="${x+hw*0.7}" y2="${hT+hH*0.8}"/>`;
       const xl2 = `<line class="mk xline" data-id="${id}" x1="${x+hw*0.7}" y1="${hT+hH*0.2}" x2="${x-hw*0.7}" y2="${hT+hH*0.8}"/>`;
-      // クリック領域（最前面）
       const hit = `<rect class="hit" data-id="${id}" x="${x-hw*0.95}" y="${hT}" width="${hw*1.9}" height="${hH}"/>`;
-      svg += xbox + b + cL + cR + o + a + xl1 + xl2 + hit;
+      svg += whole + c + b + o + a + xbox + xl1 + xl2 + hit;
     }
   });
   ov.innerHTML = svg;
@@ -330,13 +359,12 @@ function buildOverlay() {
 
 /* ================= 歯クリック処理 ================= */
 function onToothClick(id) {
+  const m = modeById(currentMode); if (!m) return;
   const d = toothData[id];
-  switch (currentMode) {
-    case "O": d.O = !d.O; break;
-    case "C": d.C = !d.C; break;
-    case "B": d.B = !d.B; break;
-    case "A": d.A = !d.A; break;
-    case "X": d.missing = !d.missing; break;
+  if (PART_TYPES.includes(m.type)) {
+    d.marks[m.id] = !d.marks[m.id];
+  } else { // whole / missing は歯単位の状態（トグル・排他）
+    d.state = (d.state === m.id) ? null : m.id;
   }
   renderTooth(id);
   updateProcess();
@@ -345,86 +373,170 @@ function onToothClick(id) {
 function renderTooth(id) {
   const d = toothData[id];
   const ov = document.getElementById("overlay");
-  const set = (cls, on) => ov.querySelectorAll(`.mk.${cls}[data-id="${id}"]`).forEach(e => e.classList.toggle("on", on));
-  // 欠損時は他のマークを隠す
-  set("o", d.O && !d.missing);
-  set("b", d.B && !d.missing);
-  set("c", d.C && !d.missing);
-  set("a", d.A && !d.missing);
-  set("xbox", d.missing);
-  set("xline", d.missing);
+  const stMode = d.state ? modeById(d.state) : null;
+  const isMissing = !!(stMode && stMode.type === "missing");
+  // 部位マーク
+  partModes().forEach(m => {
+    const on = !isMissing && !!d.marks[m.id];
+    ov.querySelectorAll(`.mk.part[data-id="${id}"][data-mode="${m.id}"]`).forEach(e => e.classList.toggle("on", on));
+  });
+  // 歯全体着色
+  const wholeEl = ov.querySelector(`.mk.whole[data-id="${id}"]`);
+  if (stMode && stMode.type === "whole") { wholeEl.style.fill = stMode.color; wholeEl.classList.add("on"); }
+  else wholeEl.classList.remove("on");
+  // 欠損
+  ov.querySelectorAll(`.mk.xbox[data-id="${id}"], .mk.xline[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isMissing));
 }
 function renderAllTeeth() { Object.keys(toothData).forEach(renderTooth); }
 
-/* ================= モード切替 ================= */
+/* ================= モードボタン / 凡例 ================= */
+function renderModeButtons() {
+  const box = document.getElementById("modeButtons");
+  box.innerHTML = modes.map(m => {
+    let sw = `background:${m.color};`;
+    if (m.type === "apex") sw += "border-radius:50%;";
+    if (m.type === "missing") sw = "background:repeating-linear-gradient(45deg,#cdd9e1,#cdd9e1 4px,#fff 4px,#fff 8px);";
+    return `<button class="mode-btn ${m.id===currentMode?'active':''}" data-mode="${m.id}"><span class="swatch" style="${sw}"></span>${escapeHtml(m.label)}</button>`;
+  }).join("");
+}
+function renderLegend() {
+  const lg = document.getElementById("legend");
+  lg.innerHTML = modes.map(m => {
+    let st = `background:${m.color};`;
+    if (m.type === "apex") st += "border-radius:50%;";
+    if (m.type === "missing") st = "background:repeating-linear-gradient(45deg,#cdd9e1,#cdd9e1 4px,#fff 4px,#fff 8px);";
+    return `<span><i style="${st}"></i>${escapeHtml(m.label)}</span>`;
+  }).join("");
+}
 document.getElementById("modeButtons").addEventListener("click", (e) => {
   const btn = e.target.closest(".mode-btn");
   if (!btn) return;
   currentMode = btn.dataset.mode;
-  document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll("#modeButtons .mode-btn").forEach(b => b.classList.toggle("active", b === btn));
 });
 
 /* ================= 治療工程表 ================= */
 function updateProcess() {
-  let caries = 0, periapical = 0, defect = 0;
+  const counts = {};
   Object.values(toothData).forEach(d => {
-    if (d.missing) { defect++; return; }
-    if (d.O || d.C || d.B) caries++;
-    if (d.A) periapical++;
+    const stMode = d.state ? modeById(d.state) : null;
+    if (stMode && stMode.type === "missing") { counts[stMode.cat] = (counts[stMode.cat]||0) + 1; return; }
+    const cats = new Set();
+    partModes().forEach(m => { if (d.marks[m.id]) cats.add(m.cat); });
+    if (stMode && stMode.type === "whole") cats.add(stMode.cat);
+    cats.forEach(c => { counts[c] = (counts[c]||0) + 1; });
   });
   const procList = document.getElementById("procList");
   procList.innerHTML = "";
   let total = 0;
-  const addCard = (cfg, count) => {
-    if (count <= 0) return;
-    const visits = (Number(cfg.visits) || 0) * count;
+  const nonLinked = [];
+  orderedCats().forEach(cat => {
+    const p = plan[cat]; const cnt = counts[cat] || 0;
+    if (!p || cnt <= 0) return;
+    if (!p.linked) { nonLinked.push(`${p.label} ×${cnt}本`); return; }
+    const visits = (Number(p.visits)||0) * cnt;
     total += visits;
-    const stepsHtml = cfg.steps.map(s => `<li>${escapeHtml(s)}</li>`).join("");
+    const stepsHtml = (p.steps||[]).map(s => `<li>${escapeHtml(s)}</li>`).join("");
     const card = document.createElement("div");
     card.className = "proc-card";
     card.innerHTML = `
       <div class="pc-head">
         <span style="display:flex;align-items:center;gap:6px;">
-          <i style="width:10px;height:10px;border-radius:3px;background:${cfg.color};display:inline-block;"></i>
-          ${escapeHtml(cfg.label)} <span style="color:var(--text-soft);font-weight:400;">×${count}本</span>
+          <i style="width:10px;height:10px;border-radius:3px;background:${catColor(cat)};display:inline-block;"></i>
+          ${escapeHtml(p.label)} <span style="color:var(--text-soft);font-weight:400;">×${cnt}本</span>
         </span>
         <span class="pc-count">${visits}回</span>
       </div>
-      <ol>${stepsHtml}</ol>`;
+      ${stepsHtml ? `<ol>${stepsHtml}</ol>` : ""}`;
     procList.appendChild(card);
-  };
-  addCard(settings.caries, caries);
-  addCard(settings.periapical, periapical);
-  addCard(settings.defect, defect);
+  });
   if (procList.children.length === 0) procList.innerHTML = `<div class="proc-empty">歯をタップすると治療工程が表示されます。</div>`;
+  if (nonLinked.length) {
+    const info = document.createElement("div");
+    info.className = "nonlinked";
+    info.textContent = "（工程表対象外）" + nonLinked.join(" ／ ");
+    procList.appendChild(info);
+  }
   document.getElementById("totalVisits").textContent = total;
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-/* ================= 設定パネル ================= */
+/* ================= 設定パネル：モード編集 ＆ 工程設定 ================= */
 const settingsBody = document.getElementById("settingsBody");
 document.getElementById("toggleSettings").addEventListener("click", function(){
   const open = settingsBody.classList.toggle("open");
   this.textContent = open ? "設定を閉じる ▲" : "設定を開く ▼";
 });
-function fillSettingsForm(){
-  document.querySelector('[data-cond="caries-steps"]').value = settings.caries.steps.join("\n");
-  document.querySelector('[data-cond="caries-visits"]').value = settings.caries.visits;
-  document.querySelector('[data-cond="periapical-steps"]').value = settings.periapical.steps.join("\n");
-  document.querySelector('[data-cond="periapical-visits"]').value = settings.periapical.visits;
-  document.querySelector('[data-cond="defect-steps"]').value = settings.defect.steps.join("\n");
-  document.querySelector('[data-cond="defect-visits"]').value = settings.defect.visits;
+const TYPE_LABEL = { occlusal:"咬合面", adjacent:"隣接面", buccal:"頬側面", apex:"根尖", missing:"欠損", whole:"着色" };
+
+function renderModeEditor() {
+  const box = document.getElementById("modeEditor");
+  box.innerHTML = modes.map((m, idx) => `
+    <div class="mode-row" data-idx="${idx}">
+      <input type="color" value="${m.color}" data-k="color">
+      <input type="text" value="${escAttr(m.label)}" data-k="label">
+      <span class="tag">${TYPE_LABEL[m.type]||m.type}</span>
+      <button class="del" data-k="del" ${m.locked?'disabled':''} title="削除">🗑</button>
+    </div>`).join("");
 }
-function readSettingsForm(){
-  const p = sel => document.querySelector(sel).value.split("\n").map(s=>s.trim()).filter(Boolean);
-  settings.caries.steps     = p('[data-cond="caries-steps"]');
-  settings.caries.visits    = Number(document.querySelector('[data-cond="caries-visits"]').value)||0;
-  settings.periapical.steps = p('[data-cond="periapical-steps"]');
-  settings.periapical.visits= Number(document.querySelector('[data-cond="periapical-visits"]').value)||0;
-  settings.defect.steps     = p('[data-cond="defect-steps"]');
-  settings.defect.visits    = Number(document.querySelector('[data-cond="defect-visits"]').value)||0;
+function renderPlanEditor() {
+  const box = document.getElementById("planEditor");
+  box.innerHTML = orderedCats().map(cat => {
+    const p = plan[cat]; if (!p) return "";
+    const steps = (p.steps||[]).join("\n");
+    return `
+    <div class="plan-row ${p.linked?'':'off'}" data-cat="${cat}">
+      <div class="pr-head">
+        <span class="sw" style="background:${catColor(cat)}"></span>${escapeHtml(p.label)}
+        <label class="lnk"><input type="checkbox" data-k="linked" ${p.linked?'checked':''}> 工程表に連動</label>
+      </div>
+      <textarea data-k="steps" placeholder="1行＝1ステップ">${escapeHtml(steps)}</textarea>
+      <div class="vrow">目安回数 <input type="number" min="0" data-k="visits" value="${p.visits}"></div>
+    </div>`;
+  }).join("");
 }
-document.getElementById("applySettings").addEventListener("click", ()=>{ readSettingsForm(); updateProcess(); toast("設定を反映しました"); });
+function refreshModeUI() { renderModeButtons(); renderLegend(); buildOverlay(); renderAllTeeth(); }
+
+// モード編集（色・名称・削除）
+document.getElementById("modeEditor").addEventListener("input", (e) => {
+  const row = e.target.closest(".mode-row"); if (!row) return;
+  const m = modes[+row.dataset.idx]; const k = e.target.dataset.k;
+  if (k === "color") { m.color = e.target.value; refreshModeUI(); renderPlanEditor(); }
+  else if (k === "label") {
+    m.label = e.target.value;
+    if (plan[m.cat] && modes.filter(x=>x.cat===m.cat).length === 1) plan[m.cat].label = e.target.value;
+    renderModeButtons(); renderLegend(); renderPlanEditor(); updateProcess();
+  }
+});
+document.getElementById("modeEditor").addEventListener("click", (e) => {
+  if (e.target.dataset.k !== "del") return;
+  const row = e.target.closest(".mode-row"); const m = modes[+row.dataset.idx];
+  if (!m || m.locked) return;
+  if (!confirm(`モード「${m.label}」を削除しますか？`)) return;
+  modes = modes.filter(x => x !== m);
+  if (!modes.some(x => x.cat === m.cat)) delete plan[m.cat];
+  Object.values(toothData).forEach(d => { if (d.state === m.id) d.state = null; delete d.marks[m.id]; });
+  if (currentMode === m.id) currentMode = modes[0].id;
+  renderModeEditor(); renderPlanEditor(); refreshModeUI(); updateProcess();
+});
+document.getElementById("addModeBtn").addEventListener("click", () => {
+  const id = "m" + Date.now().toString(36);
+  const palette = ["#e67e22","#16a085","#9b59b6","#2980b9","#c0392b","#d35400","#27ae60"];
+  const color = palette[modes.length % palette.length];
+  modes.push({ id, label:"新規モード", color, type:"whole", cat:id, locked:false });
+  plan[id] = { label:"新規モード", steps:[], visits:0, linked:false };
+  renderModeEditor(); renderPlanEditor(); refreshModeUI(); updateProcess();
+});
+
+// 工程設定（連動・工程・回数）
+document.getElementById("planEditor").addEventListener("input", (e) => {
+  const row = e.target.closest(".plan-row"); if (!row) return;
+  const p = plan[row.dataset.cat]; const k = e.target.dataset.k;
+  if (k === "linked") { p.linked = e.target.checked; row.classList.toggle("off", !p.linked); }
+  else if (k === "steps") { p.steps = e.target.value.split("\n").map(s=>s.trim()).filter(Boolean); }
+  else if (k === "visits") { p.visits = Number(e.target.value)||0; }
+  updateProcess();
+});
 
 /* ================= 歯列画像 ================= */
 function setChartImage(dataUrl){
@@ -437,8 +549,7 @@ function getPatientId(){ return document.getElementById("patientId").value.trim(
 async function saveData(){
   const patientId = getPatientId();
   if (!patientId){ toast("患者番号を入力してください", true); return; }
-  readSettingsForm();
-  const payload = { patientId, toothData, settings, chartImageData, clinicName: document.getElementById("clinicName").value, savedAt: new Date().toISOString() };
+  const payload = { patientId, toothData, settings: { modes, plan }, chartImageData, clinicName: document.getElementById("clinicName").value, savedAt: new Date().toISOString() };
   try {
     const res = await fetch(`${API_BASE}/api/save`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
     if (!res.ok) throw new Error("HTTP "+res.status);
@@ -469,28 +580,47 @@ async function loadData(){
     else { resetAll(); toast("データなし：初期状態にしました", true); }
   }
 }
-function applyLoaded(data){
-  Object.keys(toothData).forEach(id => {
-    const d = data.toothData[id];
-    toothData[id] = d ? { O:!!d.O, C:!!d.C, B:!!d.B, A:!!d.A, missing:!!d.missing }
-                      : { O:false, C:false, B:false, A:false, missing:false };
-  });
-  if (data.settings){
+/* 設定（モード/工程）を読み込む。新形式 {modes,plan} と旧形式 {caries,…} に対応 */
+function loadSettings(s){
+  modes = structuredClone(DEFAULT_MODES);
+  plan  = structuredClone(DEFAULT_PLAN);
+  if (s && Array.isArray(s.modes) && s.plan){
+    modes = structuredClone(s.modes);
+    plan  = structuredClone(s.plan);
+  } else if (s){ // 旧形式からの移行
     ["caries","periapical","defect"].forEach(k => {
-      if (data.settings[k]){
-        settings[k].steps  = Array.isArray(data.settings[k].steps) ? data.settings[k].steps : settings[k].steps;
-        settings[k].visits = Number(data.settings[k].visits)||0;
+      if (s[k]){
+        plan[k].steps  = Array.isArray(s[k].steps) ? s[k].steps : plan[k].steps;
+        plan[k].visits = Number(s[k].visits)||0;
       }
     });
   }
+  if (!modeById(currentMode)) currentMode = modes[0].id;
+}
+function applyLoaded(data){
+  loadSettings(data.settings);
+  initToothData();
+  Object.keys(toothData).forEach(id => {
+    const d = data.toothData[id];
+    if (!d) return;
+    if (d.marks || d.state !== undefined){ // 新形式
+      toothData[id] = { marks: Object.assign({}, d.marks), state: d.state || null };
+    } else { // 旧形式 {O,C,B,A,missing}
+      toothData[id] = { marks:{ O:!!d.O, C:!!d.C, B:!!d.B, A:!!d.A }, state: d.missing ? "X" : null };
+    }
+  });
   if (data.chartImageData) setChartImage(data.chartImageData);
   if (typeof data.clinicName === "string") document.getElementById("clinicName").value = data.clinicName;
-  fillSettingsForm(); renderAllTeeth(); updateProcess();
+  renderModeButtons(); renderModeEditor(); renderPlanEditor(); renderLegend();
+  buildOverlay(); renderAllTeeth(); updateProcess();
 }
 function resetAll(){
-  Object.keys(toothData).forEach(id => { toothData[id] = { O:false,C:false,B:false,A:false,missing:false }; });
-  settings = structuredClone(DEFAULT_SETTINGS);
-  fillSettingsForm(); renderAllTeeth(); updateProcess();
+  modes = structuredClone(DEFAULT_MODES);
+  plan  = structuredClone(DEFAULT_PLAN);
+  currentMode = "O";
+  initToothData();
+  renderModeButtons(); renderModeEditor(); renderPlanEditor(); renderLegend();
+  buildOverlay(); renderAllTeeth(); updateProcess();
 }
 document.getElementById("saveBtn").addEventListener("click", saveData);
 document.getElementById("loadBtn").addEventListener("click", loadData);
@@ -498,7 +628,7 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{ resetAll(); 
 
 /* ================= 印刷 ================= */
 document.getElementById("printBtn").addEventListener("click", ()=>{
-  readSettingsForm(); updateProcess();
+  updateProcess();
   document.getElementById("phClinic").textContent = document.getElementById("clinicName").value || "";
   document.getElementById("phPatient").textContent = getPatientId() || "—";
   const d = new Date();
@@ -526,9 +656,14 @@ function initChartImage(){
   img.onerror = () => { img.removeAttribute("src"); img.classList.add("placeholder"); };
   img.src = DEFAULT_CHART_SRC;
 }
+initToothData();
 buildOverlay();
+renderModeButtons();
+renderModeEditor();
+renderPlanEditor();
+renderLegend();
 initChartImage();
-fillSettingsForm();
+renderAllTeeth();
 updateProcess();
 pingServer();
 </script>

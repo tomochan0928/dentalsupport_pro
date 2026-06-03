@@ -156,9 +156,6 @@
     <h2 class="no-print">🗂 患者・操作</h2>
 
     <div class="no-print">
-      <label class="fld" for="clinicName">医院名（医院共通設定・説明書に印刷）</label>
-      <input type="text" id="clinicName" placeholder="例：○○歯科医院" autocomplete="off" />
-
       <label class="fld" for="patientId">患者番号</label>
       <input type="text" id="patientId" placeholder="例: 000123" autocomplete="off" />
 
@@ -215,6 +212,11 @@
     <button class="btn ghost" id="toggleSettings" style="width:100%;">設定を開く ▼</button>
 
     <div class="settings-body" id="settingsBody">
+      <div class="seg" style="margin-top:0;">
+        <div class="seg-title">🏥 医院名（説明書に印刷）</div>
+        <input type="text" id="clinicName" placeholder="例：○○歯科医院" autocomplete="off" />
+        <p class="hint">ここで設定し「医院共通設定を保存」で固定されます。全患者・印刷に適用。</p>
+      </div>
       <div class="clinic-note">この設定は<b>医院共通</b>です。変更後「💾 医院共通設定を保存」を押すと、この医院の全患者に適用されます（患者データとは別に保存）。</div>
       <div class="btn-row" style="margin-top:0;">
         <button class="btn" id="saveClinicBtn">💾 医院共通設定を保存</button>

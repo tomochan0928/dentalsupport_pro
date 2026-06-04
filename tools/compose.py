@@ -51,7 +51,28 @@ up = prep(UPPER, True); lo = prep(LOWER, False)
 up_maxh = max(im.size[1] for im,_ in up); lo_maxh = max(im.size[1] for im,_ in lo)
 W = max(sum(im.size[0] for im,_ in up)+GAP*15, sum(im.size[0] for im,_ in lo)+GAP*15) + 2*SIDE_MARGIN
 H = up_maxh + ARCH_GAP + lo_maxh
-chart = Image.new("RGBA",(W,H),(0,0,0,0)); mask = Image.new("RGBA",(W,H),(0,0,0,0)); geom = []
+chart = Image.new("RGBA",(W,H),(0,0,0,0)); mask = Image.new("RGBA",(W,H),(0,0,0,0))
+crownmask = Image.new("RGBA",(W,H),(0,0,0,0)); geom = []
+
+def crown_region(sil, ink, mode):
+    """歯頚線(描かれた線=ink)を境界に、咬合縁側からflood→歯頚線より上の歯冠内部だけを返す。"""
+    h, w = sil.shape
+    interior = sil & (~ink)
+    rows = range(h-1, -1, -1) if mode=="bottom" else range(0, h)   # 咬合縁側から
+    seed = None
+    for r in rows:
+        for c in range(w//2-3, w//2+4):
+            if 0 <= c < w and interior[r, c]: seed = (r, c); break
+        if seed: break
+    if seed is None: return sil
+    crown = np.zeros_like(sil); crown[seed] = True; dq = deque([seed])
+    while dq:
+        y, x = dq.popleft()
+        for dy, dx in ((1,0),(-1,0),(0,1),(0,-1)):
+            ny, nx = y+dy, x+dx
+            if 0 <= ny < h and 0 <= nx < w and interior[ny,nx] and not crown[ny,nx]:
+                crown[ny,nx] = True; dq.append((ny,nx))
+    return crown
 
 def place(items, arch, mode, y_ref):
     x = (W - (sum(im.size[0] for im,_ in items)+GAP*(len(items)-1)))//2
@@ -65,6 +86,10 @@ def place(items, arch, mode, y_ref):
         central = ai[:, mg:w-mg].sum(axis=1)
         lor, hir = int(h*0.25), int(h*0.80)
         crow = (lor + int(np.argmax(central[lor:hir]))) if hir > lor else h//2
+        # 歯冠マスク（歯頚線カーブより上の歯冠内部）
+        crb = crown_region(sil, ai, mode)
+        cm_im = np.zeros((h,w,4),np.uint8); cm_im[crb] = (255,255,255,255)
+        crownmask.alpha_composite(Image.fromarray(cm_im,"RGBA"),(x,top))
         # 根尖（根の先端）の位置を検出
         sy = np.where(sil.any(axis=1))[0]; band = max(3, int(h*0.05))
         rsel = sy[:band] if mode=="bottom" else sy[-band:]   # 上顎=根が上
@@ -107,11 +132,8 @@ put(SIDE_MARGIN*0.5, hy, "右", fjp, GRAY); put(W-SIDE_MARGIN*0.5, hy, "左", fj
 
 bg.convert("RGB").save(os.path.join(OUT,"tooth-chart.png"))
 mask.save(os.path.join(OUT,"tooth-mask.png"))
-# 歯冠ベタ塗り用：黒い輪郭を残すためシルエットを内側に少し縮めたマスク
-from PIL import ImageFilter
-a_in = mask.getchannel("A").filter(ImageFilter.MinFilter(9))
-maskin = Image.merge("RGBA", (Image.new("L", mask.size, 255),)*3 + (a_in,))
-maskin.save(os.path.join(OUT,"tooth-mask-in.png"))
+# 歯冠ベタ塗り用：歯頚線カーブより上の歯冠内部だけのマスク（黒い輪郭・歯頚線は残る）
+crownmask.save(os.path.join(OUT,"tooth-crown.png"))
 
 # index.html の TEETH_GEOM 用配列を出力
 rows = [f'{{id:"{g["a"]}{g["i"]}",a:"{g["a"]}",cx:{g["cx"]*W:.1f},w:{g["w"]*W:.1f},top:{g["top"]*H:.1f},bot:{g["bot"]*H:.1f},cerv:{g["cerv"]*H:.1f},apx:{g["apx"]*W:.1f},apy:{g["apy"]*H:.1f}}}' for g in geom]

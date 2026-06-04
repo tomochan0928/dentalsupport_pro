@@ -52,7 +52,14 @@ up_maxh = max(im.size[1] for im,_ in up); lo_maxh = max(im.size[1] for im,_ in l
 W = max(sum(im.size[0] for im,_ in up)+GAP*15, sum(im.size[0] for im,_ in lo)+GAP*15) + 2*SIDE_MARGIN
 H = up_maxh + ARCH_GAP + lo_maxh
 chart = Image.new("RGBA",(W,H),(0,0,0,0)); mask = Image.new("RGBA",(W,H),(0,0,0,0))
-crownmask = Image.new("RGBA",(W,H),(0,0,0,0)); geom = []
+crownmask = Image.new("RGBA",(W,H),(0,0,0,0))
+crownfull = Image.new("RGBA",(W,H),(0,0,0,0)); rootfull = Image.new("RGBA",(W,H),(0,0,0,0))
+geom = []
+
+def dilate(b, it=4):
+    for _ in range(it):
+        b = b | np.roll(b,1,0) | np.roll(b,-1,0) | np.roll(b,1,1) | np.roll(b,-1,1)
+    return b
 
 def crown_region(sil, ink, mode):
     """歯頚線(描かれた線=ink)を境界に、咬合縁側からflood→歯頚線より上の歯冠内部だけを返す。"""
@@ -90,6 +97,14 @@ def place(items, arch, mode, y_ref):
         crb = crown_region(sil, ai, mode)
         cm_im = np.zeros((h,w,4),np.uint8); cm_im[crb] = (255,255,255,255)
         crownmask.alpha_composite(Image.fromarray(cm_im,"RGBA"),(x,top))
+        # 歯冠側/根側マスク（輪郭を含む＝消去後の描き直し用）。歯頚カーブで分割
+        interior = sil & (~ai)
+        crb_full = dilate(crb, 4) & sil
+        root_full = dilate(interior & (~crb), 4) & sil
+        cf = np.zeros((h,w,4),np.uint8); cf[crb_full] = (255,255,255,255)
+        rf = np.zeros((h,w,4),np.uint8); rf[root_full] = (255,255,255,255)
+        crownfull.alpha_composite(Image.fromarray(cf,"RGBA"),(x,top))
+        rootfull.alpha_composite(Image.fromarray(rf,"RGBA"),(x,top))
         # 根尖（根の先端）の位置を検出
         sy = np.where(sil.any(axis=1))[0]; band = max(3, int(h*0.05))
         rsel = sy[:band] if mode=="bottom" else sy[-band:]   # 上顎=根が上
@@ -134,6 +149,9 @@ bg.convert("RGB").save(os.path.join(OUT,"tooth-chart.png"))
 mask.save(os.path.join(OUT,"tooth-mask.png"))
 # 歯冠ベタ塗り用：歯頚線カーブより上の歯冠内部だけのマスク（黒い輪郭・歯頚線は残る）
 crownmask.save(os.path.join(OUT,"tooth-crown.png"))
+# 欠損(根削除)/残根(歯冠削除)用：歯頚カーブで分割した歯冠側/根側マスク（輪郭含む）
+crownfull.save(os.path.join(OUT,"tooth-crown-full.png"))
+rootfull.save(os.path.join(OUT,"tooth-root-full.png"))
 
 # index.html の TEETH_GEOM 用配列を出力
 rows = [f'{{id:"{g["a"]}{g["i"]}",a:"{g["a"]}",cx:{g["cx"]*W:.1f},w:{g["w"]*W:.1f},top:{g["top"]*H:.1f},bot:{g["bot"]*H:.1f},cerv:{g["cerv"]*H:.1f},apx:{g["apx"]*W:.1f},apy:{g["apy"]*H:.1f}}}' for g in geom]

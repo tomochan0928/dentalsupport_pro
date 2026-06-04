@@ -102,6 +102,20 @@ npm run build:win   # dist/DentalSupportPro-win.exe を生成（Windows用）
 
 > Mac は「システム設定 → 一般 → ログイン項目」に `DentalSupportPro-mac` を追加すると同様に自動起動できます。
 
+### 子パソコン（受付・診療室の端末）の導入
+
+子パソコンは**サーバーに接続して使うだけ**なので、特別なソフトは不要です。配布物の `DentalSupportPro-Client`（`client-install.vbs` ほか）を使います。
+
+**Windows端末：**
+1. `client-install.vbs` をダブルクリック
+2. サーバーPCのIPアドレスを入力（例 `192.168.1.50`）→ OK
+3. デスクトップに **「DentalSupport Pro」アイコン**が作成され、ダブルクリックでアプリが開きます
+   - Edge / Chrome があれば **アプリ専用ウィンドウ**（タブ・アドレスバー無し）で開きます
+   - アイコン削除は `client-uninstall.vbs`、IP変更は再度 `client-install.vbs`
+
+**iPad / iPhone：**
+Safari で `http://（サーバーIP）:3000` を開き、「共有」→「ホーム画面に追加」。アプリのように使えます。
+
 ### サーバーを使わずブラウザだけで試す
 `index.html` をダブルクリックで開くだけでも全機能が動作します（この場合サーバーAPIが無いため、保存・読込は自動的にその端末の `localStorage` にフォールバックします）。
 

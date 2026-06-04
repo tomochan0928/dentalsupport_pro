@@ -1,25 +1,34 @@
 /**
  * DentalSupport Pro - ローカルサーバー（院内LAN用）
  *
- * 依存パッケージなしの Node.js 標準モジュールのみで動作します。
- *   起動: node server.js
- *   既定: http://0.0.0.0:3000  （同一LAN内の他端末からもアクセス可能）
+ * 依存パッケージなしの Node.js 標準モジュールのみで動作。
+ *   起動(Node)     : node server.js   /   npm start
+ *   起動(実行ファイル): dist/DentalSupportPro.exe をダブルクリック（Node不要・pkgで生成）
+ *   既定 http://0.0.0.0:3000（同一LAN内の他端末からもアクセス可能・ブラウザ自動起動）
  *
  * 提供API:
- *   GET  /                     -> index.html を返す
+ *   GET  /                     -> index.html（pkg時はスナップショットから配信）
  *   GET  /api/health           -> 疎通確認
  *   POST /api/save             -> 患者データ保存（JSON）
  *   GET  /api/load/:patientId  -> 患者データ読込（無ければ404）
+ *   GET/POST /api/settings     -> 医院共通設定
  *
- * データは ./data/<patientId>.json に保存されます。
+ * データは（exe/server.js と同じ場所の）data/ に保存されます。
+ *   環境変数 PORT で待受ポート、NO_OPEN=1 でブラウザ自動起動を抑止。
  */
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
+const { exec } = require("child_process");
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
-const DATA_DIR = path.join(__dirname, "data");
+// 実行ファイル(pkg)化した場合は exe と同じ場所に data を作る（書込可能）。通常は server.js と同じ場所。
+const BASE_DIR = process.pkg ? path.dirname(process.execPath) : __dirname;
+// 同梱ファイル(index.html等)は __dirname（pkgではスナップショット内）から配信
+const STATIC_DIR = __dirname;
+const DATA_DIR = path.join(BASE_DIR, "data");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -113,7 +122,7 @@ const server = http.createServer((req, res) => {
     const rel = (pathname === "/" || pathname === "/index.html") ? "index.html" : decodeURIComponent(pathname.replace(/^\/+/, ""));
     // パストラバーサル防止
     if (rel.includes("..")) { res.writeHead(403); return res.end("Forbidden"); }
-    const file = path.join(__dirname, rel);
+    const file = path.join(STATIC_DIR, rel);
     const types = { ".html":"text/html; charset=utf-8", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".webp":"image/webp", ".svg":"image/svg+xml", ".css":"text/css", ".js":"text/javascript" };
     const ext = path.extname(file).toLowerCase();
     if (types[ext] && fs.existsSync(file) && fs.statSync(file).isFile()) {
@@ -126,7 +135,42 @@ const server = http.createServer((req, res) => {
   res.end("Not Found");
 });
 
+function lanIPs() {
+  const list = [];
+  const ifs = os.networkInterfaces();
+  for (const name in ifs) for (const ni of ifs[name] || []) {
+    if (ni.family === "IPv4" && !ni.internal) list.push(ni.address);
+  }
+  return list;
+}
+function openBrowser(url) {
+  const cmd = process.platform === "win32" ? `start "" "${url}"`
+            : process.platform === "darwin" ? `open "${url}"`
+            : `xdg-open "${url}"`;
+  exec(cmd, () => {});
+}
+
+server.on("error", (e) => {
+  if (e.code === "EADDRINUSE") {
+    console.error(`\n[エラー] ポート ${PORT} は既に使用されています。`);
+    console.error(`  すでに DentalSupport Pro が起動している可能性があります。`);
+    console.error(`  別のポートで起動するには、環境変数 PORT を変更してください（例: PORT=3001）。\n`);
+  } else {
+    console.error(e);
+  }
+  setTimeout(() => process.exit(1), 100);
+});
+
 server.listen(PORT, HOST, () => {
-  console.log(`DentalSupport Pro server running at http://${HOST}:${PORT}`);
-  console.log(`データ保存先: ${DATA_DIR}`);
+  const local = `http://localhost:${PORT}`;
+  console.log("==================================================");
+  console.log("  🦷 DentalSupport Pro サーバーを起動しました");
+  console.log("==================================================");
+  console.log(`  このPCで開く : ${local}`);
+  lanIPs().forEach(ip => console.log(`  院内の他端末 : http://${ip}:${PORT}`));
+  console.log(`  データ保存先 : ${DATA_DIR}`);
+  console.log("--------------------------------------------------");
+  console.log("  ※ このウィンドウは開いたままにしてください（閉じると停止）");
+  console.log("==================================================");
+  if (process.env.NO_OPEN !== "1") openBrowser(local);
 });

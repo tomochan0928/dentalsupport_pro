@@ -3,8 +3,19 @@
   "version": "1.0.0",
   "description": "歯科医院チェアサイドで患者説明に使う歯列チャート＆治療工程表ツール（院内LAN・単一HTML＋ローカルサーバー）",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:win": "pkg . --targets node18-win-x64 --output dist/DentalSupportPro-win.exe --compress GZip",
+    "build:mac": "pkg . --targets node18-macos-x64 --output dist/DentalSupportPro-mac --compress GZip",
+    "build:all": "pkg . --targets node18-win-x64,node18-macos-x64,node18-linux-x64 --out-path dist --compress GZip"
+  },
+  "pkg": {
+    "assets": ["index.html"],
+    "outputPath": "dist"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   },
   "license": "MIT"
 }

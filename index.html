@@ -49,9 +49,10 @@
   .grp-tab.active { border-color: var(--accent-dark); background: linear-gradient(120deg,var(--accent),var(--accent-dark)); color: #fff; box-shadow: var(--shadow); }
   .grp-note { font-size: 10.5px; color: var(--text-soft); margin: 0 0 8px; }
   .grp-items { display: flex; flex-direction: column; gap: 7px; }
-  .seg .mg-sub { font-size: 12px; font-weight: 700; color: var(--accent-dark); margin: 6px 0; display: flex; justify-content: space-between; align-items: center; }
-  .seg .mg-sub .addg { font-size: 11px; font-weight: 700; color: var(--accent-dark); background: #fff; border: 1px solid var(--accent); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
-  .seg .mg-sub .addg:hover { background: #eaf7fc; }
+  #modeEditor .grp-tabs { margin-bottom: 8px; }
+  .addg { font-size: 12px; font-weight: 700; color: var(--accent-dark); background: #fff; border: 1px solid var(--accent); border-radius: 8px; padding: 8px; cursor: pointer; }
+  .addg:hover { background: #eaf7fc; }
+  .addg.full { width: 100%; margin-top: 6px; }
   .mode-btn { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 9px; background: #fbfdff; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); transition: all .15s; }
   .mode-btn:hover { border-color: var(--accent); }
   .mode-btn.active { border-color: var(--accent); background: #e9f7fc; box-shadow: inset 0 0 0 1px var(--accent); }
@@ -468,7 +469,7 @@ document.getElementById("modeButtons").addEventListener("click", (e) => {
     activeGroup = tab.dataset.group;
     const ms = modes.filter(m => (m.group||"status") === activeGroup);
     if (ms.length && !ms.some(m => m.id === currentMode)) currentMode = ms[0].id;
-    renderModeButtons();
+    renderModeButtons(); renderModeEditor();
     return;
   }
   const btn = e.target.closest(".mode-btn"); if (!btn) return;
@@ -531,27 +532,19 @@ const TYPE_LABEL = { caries:"う蝕(部位)", apex:"根尖", missing:"欠損", w
 
 function renderModeEditor() {
   const rowHtml = (m, idx) => {
-    let colorPart;
-    if (m.type === "caries") {
-      colorPart = `<div class="ccols">
-        <input type="color" value="${m.colors.occlusal}" data-k="c-occlusal" title="咬合面">
-        <input type="color" value="${m.colors.adjacent}" data-k="c-adjacent" title="隣接面">
-        <input type="color" value="${m.colors.buccal}" data-k="c-buccal" title="頬側面"></div>`;
-    } else {
-      colorPart = `<input type="color" value="${m.color}" data-k="color">`;
-    }
-    return `<div class="mode-row" data-idx="${idx}">
-      ${colorPart}
-      <input type="text" value="${escAttr(m.label)}" data-k="label">
-      <span class="tag">${TYPE_LABEL[m.type]||m.type}</span>
-      <button class="del" data-k="del" ${m.locked?'disabled':''} title="削除">🗑</button>
-    </div>`;
+    const colorPart = m.type === "caries"
+      ? `<div class="ccols"><input type="color" value="${m.colors.occlusal}" data-k="c-occlusal" title="咬合面"><input type="color" value="${m.colors.adjacent}" data-k="c-adjacent" title="隣接面"><input type="color" value="${m.colors.buccal}" data-k="c-buccal" title="頬側面"></div>`
+      : `<input type="color" value="${m.color}" data-k="color">`;
+    return `<div class="mode-row" data-idx="${idx}">${colorPart}<input type="text" value="${escAttr(m.label)}" data-k="label"><button class="del" data-k="del" ${m.locked?'disabled':''} title="削除">🗑</button></div>`;
   };
-  document.getElementById("modeEditor").innerHTML = GROUPS.map(gr => {
-    const rows = modes.map((m,idx)=>[m,idx]).filter(([m])=>(m.group||"status")===gr.key);
-    if (!rows.length) return "";
-    return `<div class="mg-sub">${escapeHtml(gr.label)}<button class="addg" data-addgroup="${gr.key}">＋ 追加</button></div>` + rows.map(([m,idx])=>rowHtml(m,idx)).join("");
-  }).join("");
+  // タブで大項目を選び、その項目だけ表示
+  const tabs = GROUPS.map(gr =>
+    `<button class="grp-tab ${gr.key===activeGroup?'active':''}" data-egroup="${gr.key}">${escapeHtml(gr.label)}</button>`
+  ).join("");
+  const rows = modes.map((m,idx)=>[m,idx]).filter(([m])=>(m.group||"status")===activeGroup)
+                    .map(([m,idx])=>rowHtml(m,idx)).join("");
+  document.getElementById("modeEditor").innerHTML =
+    `<div class="grp-tabs">${tabs}</div>${rows}<button class="addg full" data-addgroup="${activeGroup}">＋ 項目を追加</button>`;
 }
 function renderPlanEditor() {
   document.getElementById("planEditor").innerHTML = orderedCats().map(cat => {
@@ -585,6 +578,14 @@ document.getElementById("modeEditor").addEventListener("input", (e) => {
   }
 });
 document.getElementById("modeEditor").addEventListener("click", (e) => {
+  const tab = e.target.closest("[data-egroup]");
+  if (tab) {
+    activeGroup = tab.dataset.egroup;
+    const ms = modes.filter(m => (m.group||"status") === activeGroup);
+    if (ms.length && !ms.some(m => m.id === currentMode)) currentMode = ms[0].id;
+    renderModeButtons(); renderModeEditor();
+    return;
+  }
   const addBtn = e.target.closest("[data-addgroup]");
   if (addBtn) { addModeToGroup(addBtn.dataset.addgroup); return; }
   if (e.target.dataset.k !== "del") return;

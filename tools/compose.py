@@ -36,7 +36,7 @@ def silhouette(im):
 
 # 上顎=1..16（患者右→左）。下顎は標準チャート配置に合わせ反転（32..17）で患者右を画面左に。
 UPPER, LOWER = list(range(1,17)), list(range(32,16,-1))
-GAP, ARCH_GAP = 6, 150
+GAP, ARCH_GAP, SIDE_MARGIN = 6, 170, 150
 
 def prep(nums, root_up):
     out = []
@@ -49,7 +49,7 @@ def prep(nums, root_up):
 
 up = prep(UPPER, True); lo = prep(LOWER, False)
 up_maxh = max(im.size[1] for im,_ in up); lo_maxh = max(im.size[1] for im,_ in lo)
-W = max(sum(im.size[0] for im,_ in up)+GAP*15, sum(im.size[0] for im,_ in lo)+GAP*15)
+W = max(sum(im.size[0] for im,_ in up)+GAP*15, sum(im.size[0] for im,_ in lo)+GAP*15) + 2*SIDE_MARGIN
 H = up_maxh + ARCH_GAP + lo_maxh
 chart = Image.new("RGBA",(W,H),(0,0,0,0)); mask = Image.new("RGBA",(W,H),(0,0,0,0)); geom = []
 
@@ -78,26 +78,32 @@ def place(items, arch, mode, y_ref):
 place(up,"U","bottom", up_maxh); place(lo,"L","top", up_maxh+ARCH_GAP)
 bg = Image.new("RGBA",(W,H),(255,255,255,255)); bg.alpha_composite(chart)
 
-# ===== 歯式番号（Palmer 1〜8）・中央線・R/L をチャートに焼き込み =====
+# ===== 歯式番号（Palmer 1〜8・左右両側）・正中線・横線・右/左 をチャートに焼き込み =====
 from PIL import ImageDraw, ImageFont
-FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-try: fnum = ImageFont.truetype(FONT, 48); frl = ImageFont.truetype(FONT, 64)
-except Exception: fnum = ImageFont.load_default(); frl = fnum
+FONT_NUM = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT_JP  = "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf"
+try: fnum = ImageFont.truetype(FONT_NUM, 48)
+except Exception: fnum = ImageFont.load_default()
+try: fjp = ImageFont.truetype(FONT_JP, 64)
+except Exception: fjp = fnum
 draw = ImageDraw.Draw(bg)
-GRAY = (88,100,112,255); LGRAY = (175,188,200,255)
+GRAY = (70,82,94,255); LGRAY = (150,164,178,255)
 def palmer(i): return (8-i) if i < 8 else (i-7)   # 各顎 左→右: 8..1 | 1..8
 gU = [g for g in geom if g["a"]=="U"]; gL = [g for g in geom if g["a"]=="L"]
-# 中央線（正中）
-mx = (gU[7]["cx"]+gU[8]["cx"])/2 * W
-draw.line([(mx,4),(mx,H-4)], fill=LGRAY, width=2)
 def put(cx_px, cy_px, s, font, fill):
     b = draw.textbbox((0,0), s, font=font); draw.text((cx_px-(b[2]-b[0])/2, cy_px-(b[3]-b[1])/2-b[1]), s, fill=fill, font=font)
-yU = up_maxh + 46                 # 上顎番号（咬合縁の少し下＝歯間ギャップ内）
-yL = up_maxh + ARCH_GAP - 46      # 下顎番号（咬合縁の少し上）
+yU = up_maxh + 50                 # 上顎番号（咬合縁の下）
+yL = up_maxh + ARCH_GAP - 50      # 下顎番号（咬合縁の上）
+hy = (yU + yL) / 2                # 横線（上下の境界）
+# 正中線（縦）・横線で Palmer の十字
+mx = (gU[7]["cx"]+gU[8]["cx"])/2 * W
+draw.line([(mx,8),(mx,H-8)], fill=LGRAY, width=3)
+draw.line([(SIDE_MARGIN-10, hy),(W-SIDE_MARGIN+10, hy)], fill=LGRAY, width=3)
+# 歯式番号（左右 両側とも）
 for g in gU: put(g["cx"]*W, yU, str(palmer(g["i"]-1)), fnum, GRAY)
 for g in gL: put(g["cx"]*W, yL, str(palmer(g["i"]-1)), fnum, GRAY)
-# 患者の左右（R=患者右=画面左, L=患者左=画面右）
-put(40, (yU+yL)/2, "R", frl, GRAY); put(W-40, (yU+yL)/2, "L", frl, GRAY)
+# 右／左（患者基準：右=画面左、左=画面右）
+put(SIDE_MARGIN*0.5, hy, "右", fjp, GRAY); put(W-SIDE_MARGIN*0.5, hy, "左", fjp, GRAY)
 
 bg.convert("RGB").save(os.path.join(OUT,"tooth-chart.png"))
 mask.save(os.path.join(OUT,"tooth-mask.png"))

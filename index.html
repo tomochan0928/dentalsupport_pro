@@ -42,7 +42,11 @@
   .btn-row { display: flex; gap: 8px; margin-top: 10px; }
   .btn-row .btn { flex: 1; }
 
-  .modes { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+  .modes { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .mode-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .mode-group .mg-title { font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: #eaf4f9; border-left: 4px solid var(--accent); border-radius: 4px; padding: 5px 8px; margin-bottom: 2px; }
+  .mode-group .mg-title small { display: block; font-weight: 400; font-size: 10px; color: var(--text-soft); }
+  .seg .mg-sub { font-size: 12px; font-weight: 700; color: var(--accent-dark); margin: 4px 0 6px; }
   .mode-btn { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 9px; background: #fbfdff; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); transition: all .15s; }
   .mode-btn:hover { border-color: var(--accent); }
   .mode-btn.active { border-color: var(--accent); background: #e9f7fc; box-shadow: inset 0 0 0 1px var(--accent); }
@@ -255,23 +259,38 @@ const DEFAULT_CHART_SRC = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAACWUAAAM
    type: caries=う蝕(部位クリックで咬合面O/近心隣接面Cm/遠心隣接面Cd/頬側面Bを指定),
          apex=根尖マーク, whole=歯全体を着色, missing=欠損
    cat : 治療工程カテゴリ。同一catは1本につき1治療として計上 */
+const GROUPS = [
+  { key:"problem", label:"① プロブレムリスト", note:"治療対象（工程表に連動）" },
+  { key:"status",  label:"② 歯式作成",         note:"現在の口腔内の現状把握" }
+];
+const PROBLEM_CATS = ["caries","periapical","prosth"];
 const DEFAULT_MODES = [
-  { id:"caries", label:"う蝕", type:"caries", cat:"caries", locked:true,
+  // ① プロブレムリスト（治療対象）
+  { id:"caries", group:"problem", label:"う蝕", type:"caries", cat:"caries", locked:true,
     colors:{ occlusal:"#e6443a", adjacent:"#f59331", buccal:"#f5d623" } },
-  { id:"A", label:"根尖性歯周炎（A）", color:"#d8221a", type:"apex", cat:"periapical", locked:true },
-  { id:"X", label:"欠損（削除）", color:"#8597a4", type:"missing", cat:"defect", locked:true },
-  { id:"done",   label:"治療済み(充填/CR)",      color:"#5aa46a", type:"whole", cat:"done",   locked:false },
-  { id:"prosth", label:"補綴(クラウン/ブリッジ)", color:"#8e7cf0", type:"whole", cat:"prosth", locked:false },
-  { id:"watch",  label:"要観察(CO/初期う蝕)",    color:"#3fb6dd", type:"whole", cat:"watch",  locked:false }
+  { id:"A",      group:"problem", label:"根尖性歯周炎（A）", color:"#d8221a", type:"apex",  cat:"periapical", locked:true },
+  { id:"prosth", group:"problem", label:"補綴（要処置）",    color:"#8e7cf0", type:"whole", cat:"prosth",     locked:true },
+  // ② 歯式作成（現状把握）
+  { id:"X",       group:"status", label:"欠損",           color:"#8597a4", type:"missing", cat:"defect",  locked:true },
+  { id:"bridge",  group:"status", label:"ブリッジ",       color:"#c0894f", type:"whole",   cat:"bridge",  locked:true },
+  { id:"crownex", group:"status", label:"補綴（装着済）", color:"#7fa8c9", type:"whole",   cat:"crownex", locked:true },
+  { id:"rroot",   group:"status", label:"残根",           color:"#8a5a3c", type:"whole",   cat:"rroot",   locked:true },
+  { id:"done",    group:"status", label:"治療済み(充填/CR)",   color:"#5aa46a", type:"whole", cat:"done",  locked:false },
+  { id:"watch",   group:"status", label:"要観察(CO/初期う蝕)", color:"#3fb6dd", type:"whole", cat:"watch", locked:false }
 ];
 const DEFAULT_PLAN = {
-  caries:     { label:"う蝕（O/C/B）",        steps:["1.う蝕除去","2.型取り","3.セット"], visits:2, linked:true },
-  periapical: { label:"根尖性歯周炎（A）",    steps:["1.感染根管処置","2.根管貼薬(複数回)","3.根管充填","4.支台築造","5.窩洞準備・印象","6.クラウンセット"], visits:5, linked:true },
-  defect:     { label:"欠損補綴",             steps:["1.欠損補綴カウンセリング（ブリッジ/インプラント/義歯選定）"], visits:1, linked:true },
-  done:       { label:"治療済み(充填/CR)",     steps:[], visits:0, linked:false },
-  prosth:     { label:"補綴(クラウン/ブリッジ)", steps:["1.支台形成","2.印象","3.セット"], visits:3, linked:true },
-  watch:      { label:"要観察(CO/初期う蝕)",   steps:["1.経過観察・ブラッシング指導"], visits:1, linked:false }
+  caries:     { label:"う蝕（O/C/B）",     steps:["1.う蝕除去","2.型取り","3.セット"], visits:2, linked:true },
+  periapical: { label:"根尖性歯周炎（A）", steps:["1.感染根管処置","2.根管貼薬(複数回)","3.根管充填","4.支台築造","5.窩洞準備・印象","6.クラウンセット"], visits:5, linked:true },
+  prosth:     { label:"補綴（要処置）",    steps:["1.支台形成","2.印象","3.セット"], visits:3, linked:true },
+  defect:     { label:"欠損",           steps:[], visits:0, linked:false },
+  bridge:     { label:"ブリッジ",       steps:[], visits:0, linked:false },
+  crownex:    { label:"補綴（装着済）", steps:[], visits:0, linked:false },
+  rroot:      { label:"残根",           steps:[], visits:0, linked:false },
+  done:       { label:"治療済み(充填/CR)",   steps:[], visits:0, linked:false },
+  watch:      { label:"要観察(CO/初期う蝕)", steps:[], visits:0, linked:false }
 };
+/* 旧データ等で group が無いモードに group を補完 */
+function ensureGroups(){ modes.forEach(m => { if (!m.group) m.group = PROBLEM_CATS.includes(m.cat) ? "problem" : "status"; }); }
 const SURFACES = ["O","Cm","Cd","B"]; // 咬合面/近心隣接面/遠心隣接面/頬側面
 
 let modes = structuredClone(DEFAULT_MODES);
@@ -414,9 +433,14 @@ function modeSwatchStyle(m) {
   return `background:${m.color};`;
 }
 function renderModeButtons() {
-  document.getElementById("modeButtons").innerHTML = modes.map(m =>
-    `<button class="mode-btn ${m.id===currentMode?'active':''}" data-mode="${m.id}"><span class="swatch" style="${modeSwatchStyle(m)}"></span>${escapeHtml(m.label)}</button>`
-  ).join("");
+  document.getElementById("modeButtons").innerHTML = GROUPS.map(gr => {
+    const ms = modes.filter(m => (m.group||"status") === gr.key);
+    if (!ms.length) return "";
+    const btns = ms.map(m =>
+      `<button class="mode-btn ${m.id===currentMode?'active':''}" data-mode="${m.id}"><span class="swatch" style="${modeSwatchStyle(m)}"></span>${escapeHtml(m.label)}</button>`
+    ).join("");
+    return `<div class="mode-group"><div class="mg-title">${escapeHtml(gr.label)}<small>${escapeHtml(gr.note)}</small></div>${btns}</div>`;
+  }).join("");
 }
 function renderLegend() {
   const items = [];
@@ -491,7 +515,7 @@ document.getElementById("toggleSettings").addEventListener("click", function(){
 const TYPE_LABEL = { caries:"う蝕(部位)", apex:"根尖", missing:"欠損", whole:"着色" };
 
 function renderModeEditor() {
-  document.getElementById("modeEditor").innerHTML = modes.map((m, idx) => {
+  const rowHtml = (m, idx) => {
     let colorPart;
     if (m.type === "caries") {
       colorPart = `<div class="ccols">
@@ -507,6 +531,11 @@ function renderModeEditor() {
       <span class="tag">${TYPE_LABEL[m.type]||m.type}</span>
       <button class="del" data-k="del" ${m.locked?'disabled':''} title="削除">🗑</button>
     </div>`;
+  };
+  document.getElementById("modeEditor").innerHTML = GROUPS.map(gr => {
+    const rows = modes.map((m,idx)=>[m,idx]).filter(([m])=>(m.group||"status")===gr.key);
+    if (!rows.length) return "";
+    return `<div class="mg-sub">${escapeHtml(gr.label)}</div>` + rows.map(([m,idx])=>rowHtml(m,idx)).join("");
   }).join("");
 }
 function renderPlanEditor() {
@@ -554,7 +583,7 @@ document.getElementById("modeEditor").addEventListener("click", (e) => {
 document.getElementById("addModeBtn").addEventListener("click", () => {
   const id = "m" + Date.now().toString(36);
   const palette = ["#e67e22","#16a085","#9b59b6","#2980b9","#c0392b","#d35400","#27ae60"];
-  modes.push({ id, label:"新規モード", color:palette[modes.length % palette.length], type:"whole", cat:id, locked:false });
+  modes.push({ id, group:"status", label:"新規モード", color:palette[modes.length % palette.length], type:"whole", cat:id, locked:false });
   plan[id] = { label:"新規モード", steps:[], visits:0, linked:false };
   renderModeEditor(); renderPlanEditor(); refreshModeUI(); updateProcess();
 });
@@ -576,7 +605,7 @@ document.getElementById("planEditor").addEventListener("input", (e) => {
 document.getElementById("addProcBtn").addEventListener("click", () => {
   const id = "p" + Date.now().toString(36);
   const palette = ["#e67e22","#16a085","#9b59b6","#2980b9","#c0392b","#d35400","#27ae60","#2c3e50"];
-  modes.push({ id, label:"新規処置", color:palette[modes.length % palette.length], type:"whole", cat:id, locked:false });
+  modes.push({ id, group:"problem", label:"新規処置", color:palette[modes.length % palette.length], type:"whole", cat:id, locked:false });
   plan[id] = { label:"新規処置", steps:["1.処置"], visits:1, linked:true };
   renderModeEditor(); renderPlanEditor(); refreshModeUI(); updateProcess();
 });
@@ -584,6 +613,7 @@ document.getElementById("addProcBtn").addEventListener("click", () => {
 /* ================= 医院共通設定（保存・読込） ================= */
 function applyClinicSettings(s) {
   if (s && Array.isArray(s.modes) && s.plan) { modes = structuredClone(s.modes); plan = structuredClone(s.plan); }
+  ensureGroups();
   if (s && typeof s.clinicName === "string") document.getElementById("clinicName").value = s.clinicName;
   if (!modeById(currentMode)) currentMode = modes[0].id;
 }

@@ -107,6 +107,11 @@ put(SIDE_MARGIN*0.5, hy, "右", fjp, GRAY); put(W-SIDE_MARGIN*0.5, hy, "左", fj
 
 bg.convert("RGB").save(os.path.join(OUT,"tooth-chart.png"))
 mask.save(os.path.join(OUT,"tooth-mask.png"))
+# 歯冠ベタ塗り用：黒い輪郭を残すためシルエットを内側に少し縮めたマスク
+from PIL import ImageFilter
+a_in = mask.getchannel("A").filter(ImageFilter.MinFilter(9))
+maskin = Image.merge("RGBA", (Image.new("L", mask.size, 255),)*3 + (a_in,))
+maskin.save(os.path.join(OUT,"tooth-mask-in.png"))
 
 # index.html の TEETH_GEOM 用配列を出力
 rows = [f'{{id:"{g["a"]}{g["i"]}",a:"{g["a"]}",cx:{g["cx"]*W:.1f},w:{g["w"]*W:.1f},top:{g["top"]*H:.1f},bot:{g["bot"]*H:.1f},cerv:{g["cerv"]*H:.1f},apx:{g["apx"]*W:.1f},apy:{g["apy"]*H:.1f}}}' for g in geom]

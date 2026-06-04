@@ -3,3 +3,5 @@ data/
 *.log
 dist/dentalsupport-pro-linux
 dist/dentalsupport-pro-mac
+dist/DentalSupportPro/
+dist/DentalSupportPro.zip

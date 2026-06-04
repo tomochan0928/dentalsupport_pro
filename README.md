@@ -84,6 +84,24 @@ npm run build:win   # dist/DentalSupportPro-win.exe を生成（Windows用）
 # npm run build:all  # win / mac / linux をまとめて生成
 ```
 
+### スタートアップ自動起動（PC起動時に自動でサーバーを立ち上げる・Windows）
+
+毎朝の手動起動が不要になります。**サーバー役のPC**で、`DentalSupportPro.exe` と以下のスクリプトを同じフォルダに置いてから操作します。
+
+| 操作 | ファイル |
+|---|---|
+| **自動起動を登録**（ログオン時に自動起動） | `autostart-install.vbs` をダブルクリック |
+| 自動起動を解除 | `autostart-uninstall.vbs` をダブルクリック |
+| 今すぐ静かに起動（画面に出さず・ブラウザも開かない） | `start-hidden.vbs` |
+| サーバーを停止 | `stop-server.bat` |
+| このPCでアプリを開く | `open-app.bat`（または `http://localhost:3000`） |
+
+- 自動起動はバックグラウンド（ウィンドウ非表示）で動くため、サーバーPCの画面はすっきりしたままです。
+- 各端末（iPad等）は、表示される **`http://（サーバーPCのIP）:3000`** にアクセスします（IP固定を推奨）。
+- 仕組み：`autostart-install.vbs` が Windows のスタートアップフォルダに `start-hidden.vbs`（exeを非表示・`NO_OPEN=1`で起動）へのショートカットを作成します。レジストリは変更しません。
+
+> Mac は「システム設定 → 一般 → ログイン項目」に `DentalSupportPro-mac` を追加すると同様に自動起動できます。
+
 ### サーバーを使わずブラウザだけで試す
 `index.html` をダブルクリックで開くだけでも全機能が動作します（この場合サーバーAPIが無いため、保存・読込は自動的にその端末の `localStorage` にフォールバックします）。
 

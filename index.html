@@ -375,9 +375,8 @@ function buildOverlay() {
       apexMarks += `<g class="mk part" data-id="${id}" data-mode="${apx.id}">`
         + `<circle cx="${m.apexX}" cy="${m.apexY}" r="${r}" fill="${apx.color}" fill-opacity="0.32" stroke="${apx.color}" stroke-width="${Math.max(r*0.16,2.5)}" stroke-opacity="0.95"/></g>`;
     }
-    // 欠損=根削除／残根=歯冠削除：全体を背景色で消し、残す側を歯頚カーブで切り出して描き直す
+    // 欠損=歯を完全に削除（全消去）／残根=歯冠だけ消し根を歯頚カーブで描き直す
     eraseMarks += `<rect class="mk eraseall" data-id="${id}" x="${x-hw-3}" y="${hT-3}" width="${hw*2+6}" height="${hH+6}" fill="#ffffff"/>`;
-    eraseMarks += `<g class="mk restorecrown" data-id="${id}" mask="url(#toothcrownf)" clip-path="url(#cl_${id})"><use href="#chartimg"/></g>`;
     eraseMarks += `<g class="mk restoreroot" data-id="${id}" mask="url(#toothrootf)" clip-path="url(#cl_${id})"><use href="#chartimg"/></g>`;
     // クリックゾーン（部位指定）
     const occTop = m.occLower ? m.bnd : hT, occH = m.occLower ? (m.hb-m.bnd) : (m.bnd-hT);
@@ -433,9 +432,8 @@ function renderTooth(id) {
   const wholeEl = ov.querySelector(`.mk.whole[data-id="${id}"]`);
   if (stMode && stMode.type === "whole") { wholeEl.style.fill = stMode.color; wholeEl.classList.add("on"); }
   else wholeEl.classList.remove("on");
-  // 欠損=根を消す（歯冠を歯頚カーブで残す）/ 残根=歯冠を消す（根を残す）
+  // 欠損=歯を完全に削除（全消去）／ 残根=歯冠を消す（根を歯頚カーブで残す）
   ov.querySelectorAll(`.mk.eraseall[data-id="${id}"]`).forEach(e => e.classList.toggle("on", altered));
-  ov.querySelectorAll(`.mk.restorecrown[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isMissing));
   ov.querySelectorAll(`.mk.restoreroot[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isRroot));
 }
 function renderAllTeeth() { Object.keys(toothData).forEach(renderTooth); renderBridges(); }

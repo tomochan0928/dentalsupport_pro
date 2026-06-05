@@ -80,7 +80,7 @@ node server.js   # または npm start
 
 ```bash
 npm install
-npm run build:win   # dist/DentalSupportPro.exe を生成（Windows 7対応 Node14ビルド）
+npm run build:win   # dist/DentalSupportPro.exe を生成（Windows 7対応 Node12ビルド）
 # npm run build:all  # win / mac / linux をまとめて生成
 # npm run build:dist # exeビルド＋配布zip(文字コード調整済)を生成
 ```

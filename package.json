@@ -6,9 +6,9 @@
   "bin": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build:win": "pkg . --targets node14-win-x64 --output dist/DentalSupportPro.exe --compress GZip",
-    "build:mac": "pkg . --targets node14-macos-x64 --output dist/DentalSupportPro-mac --compress GZip",
-    "build:all": "pkg . --targets node14-win-x64,node14-macos-x64,node14-linux-x64 --out-path dist --compress GZip",
+    "build:win": "pkg . --targets node12-win-x64 --output dist/DentalSupportPro.exe --compress GZip",
+    "build:mac": "pkg . --targets node12-macos-x64 --output dist/DentalSupportPro-mac --compress GZip",
+    "build:all": "pkg . --targets node12-win-x64,node12-macos-x64,node12-linux-x64 --out-path dist --compress GZip",
     "build:dist": "npm run build:win && python3 tools/build_dist.py"
   },
   "pkg": {

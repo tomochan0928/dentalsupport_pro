@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 title DentalSupport Pro 停止
 taskkill /IM DentalSupportPro.exe /F >nul 2>nul
 if errorlevel 1 (

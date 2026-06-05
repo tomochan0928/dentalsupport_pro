@@ -57,7 +57,7 @@
 
 ### 方法A：実行ファイル版（推奨・Node.js不要・一番かんたん）
 
-1. `dist/DentalSupportPro.exe`（Windows用・約38MB）を、データを置きたいフォルダ（例：デスクトップに「DentalSupport」フォルダを作る）に入れる。
+1. `dist/DentalSupportPro.exe`（Windows用・約32MB／**Windows 7 以降対応**）を、データを置きたいフォルダ（例：デスクトップに「DentalSupport」フォルダを作る）に入れる。
 2. **ダブルクリックで起動**。黒いウィンドウが開き、**自動でブラウザが立ち上がります**。
 3. ウィンドウに表示される **院内の他端末用URL（例：`http://192.168.x.x:3000`）** を、iPad等のブラウザのお気に入りに登録すれば、同じLAN内のどの端末からも使えます。
 4. 終了する時は黒いウィンドウを閉じます（開いている間だけ動作）。
@@ -80,8 +80,9 @@ node server.js   # または npm start
 
 ```bash
 npm install
-npm run build:win   # dist/DentalSupportPro-win.exe を生成（Windows用）
+npm run build:win   # dist/DentalSupportPro.exe を生成（Windows 7対応 Node14ビルド）
 # npm run build:all  # win / mac / linux をまとめて生成
+# npm run build:dist # exeビルド＋配布zip(文字コード調整済)を生成
 ```
 
 ### スタートアップ自動起動（PC起動時に自動でサーバーを立ち上げる・Windows）

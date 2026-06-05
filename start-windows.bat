@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
 title DentalSupport Pro サーバー
 where node >nul 2>nul

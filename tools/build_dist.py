@@ -42,6 +42,8 @@ build("DentalSupportPro", [
     ("vbs","start-hidden.vbs","start-hidden.vbs"),
     ("vbs","autostart-install.vbs","autostart-install.vbs"),
     ("vbs","autostart-uninstall.vbs","autostart-uninstall.vbs"),
+    ("vbs","allow-firewall.vbs","allow-firewall.vbs"),
+    ("vbs","disallow-firewall.vbs","disallow-firewall.vbs"),
     ("bat","stop-server.bat","stop-server.bat"),
     ("bat","open-app.bat","open-app.bat"),
     ("bat","start-windows.bat","start-windows.bat"),

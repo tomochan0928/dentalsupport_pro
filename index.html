@@ -329,13 +329,13 @@ const DEFAULT_MODES = [
     colors:{ occlusal:"#e6443a", adjacent:"#f59331", buccal:"#f5d623" } },
   { id:"A",      group:"problem", label:"根尖性歯周炎（A）", color:"#d8221a", type:"apex",  cat:"periapical", locked:true },
   { id:"prosth", group:"problem", label:"補綴（要処置）",    color:"#8e7cf0", type:"whole", cat:"prosth",     locked:true },
-  { id:"implant", group:"problem", label:"インプラント",     color:"#5b6b76", type:"implant", cat:"implant",  locked:true },
+  { id:"implant", group:"problem", label:"インプラント",     color:"#1f9d8a", type:"implant", cat:"implant",  locked:true },
   // ② 歯式作成（現状把握）
   { id:"X",       group:"status", label:"欠損",           color:"#8597a4", type:"missing", cat:"defect",  locked:true },
   { id:"bridge",  group:"status", label:"ブリッジ",       color:"#c0894f", type:"bridge",  cat:"bridge",  locked:true },
   { id:"crownex", group:"status", label:"補綴（装着済）", color:"#7fa8c9", type:"whole",   cat:"crownex", locked:true },
   { id:"rroot",   group:"status", label:"残根",           color:"#8a5a3c", type:"rroot",   cat:"rroot",   locked:true },
-  { id:"implant_st", group:"status", label:"インプラント", color:"#5b6b76", type:"implant", cat:"implant_st", locked:true },
+  { id:"implant_st", group:"status", label:"インプラント", color:"#9b59b6", type:"implant", cat:"implant_st", locked:true },
   { id:"done",    group:"status", label:"治療済み(充填/CR)",   color:"#5aa46a", type:"whole", cat:"done",  locked:false },
   { id:"watch",   group:"status", label:"要観察(CO/初期う蝕)", color:"#3fb6dd", type:"whole", cat:"watch", locked:false }
 ];
@@ -368,6 +368,14 @@ const apexModes  = () => modes.filter(m => m.type === "apex");
 const orderedCats= () => { const seen=[]; modes.forEach(m=>{ if(!seen.includes(m.cat)) seen.push(m.cat); }); return seen; };
 const catColor   = cat => { const m=modes.find(x=>x.cat===cat); if(!m) return "#8597a4"; return m.color || (m.colors&&m.colors.occlusal) || "#8597a4"; };
 const escAttr    = s => String(s).replace(/"/g,"&quot;").replace(/</g,"&lt;");
+// 色を暗く/明るくする（amt<0で暗く, >0で明るく）。インプラント体の輪郭線などに使用。
+function shade(hex, amt) {
+  let c = String(hex||"#888888").replace("#",""); if (c.length===3) c=c.split("").map(x=>x+x).join("");
+  let r=parseInt(c.slice(0,2),16), g=parseInt(c.slice(2,4),16), b=parseInt(c.slice(4,6),16);
+  const f = amt<0 ? (1+amt) : (1-amt), add = amt>0 ? 255*amt : 0;
+  const h = n => ("0"+Math.max(0,Math.min(255,Math.round(n))).toString(16)).slice(-2);
+  return "#"+h(r*f+add)+h(g*f+add)+h(b*f+add);
+}
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 const VBW = 2405, VBH = 799; // overlay viewBox（同梱 tooth-chart.png と同寸）
@@ -529,7 +537,10 @@ function renderTooth(id) {
   ov.querySelectorAll(`.mk.eraseall[data-id="${id}"]`).forEach(e => e.classList.toggle("on", altered));
   ov.querySelectorAll(`.mk.restorecrown[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isPontic || isImplant));
   ov.querySelectorAll(`.mk.restoreroot[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isRroot));
-  ov.querySelectorAll(`.mk.implant[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isImplant));
+  ov.querySelectorAll(`.mk.implant[data-id="${id}"]`).forEach(e => {
+    e.classList.toggle("on", isImplant);
+    if (isImplant) { e.setAttribute("fill", stMode.color); e.setAttribute("stroke", shade(stMode.color, -0.5)); } // モード色で塗り分け
+  });
 }
 function renderAllTeeth() { Object.keys(toothData).forEach(renderTooth); renderBridges(); }
 
@@ -686,7 +697,7 @@ document.getElementById("applyUpdateBtn").addEventListener("click", async () => 
     st.textContent = "⚠ 更新できませんでした（サーバー未接続の可能性）：" + e.message;
   }
 });
-const TYPE_LABEL = { caries:"う蝕(部位)", apex:"根尖", missing:"欠損", whole:"着色" };
+const TYPE_LABEL = { caries:"う蝕(部位)", apex:"根尖", missing:"欠損", whole:"着色", implant:"インプラント" };
 
 function renderModeEditor() {
   const rowHtml = (m, idx) => {

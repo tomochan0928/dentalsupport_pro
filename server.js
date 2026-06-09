@@ -85,6 +85,28 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  // アプリ画面の更新：受け取った新しい index.html を exe の隣(BASE_DIR)に書き込む。
+  // 院内のどの端末のブラウザからでも、設定画面でファイルを選ぶだけで画面を更新できる。
+  if (req.method === "POST" && pathname === "/api/update-ui") {
+    let body = "", tooBig = false;
+    req.on("data", chunk => { body += chunk; if (body.length > 1e7) { tooBig = true; req.destroy(); } });
+    req.on("end", () => {
+      if (tooBig) return sendJson(res, 413, { ok: false, error: "too large" });
+      if (body.length < 100 || !/<html[\s>]/i.test(body)) {
+        return sendJson(res, 400, { ok: false, error: "not an HTML document" });
+      }
+      try {
+        const target = path.join(BASE_DIR, "index.html");
+        if (fs.existsSync(target)) fs.copyFileSync(target, path.join(BASE_DIR, "index.html.bak")); // 直前版をバックアップ
+        fs.writeFileSync(target, body, "utf-8");
+        return sendJson(res, 200, { ok: true, bytes: Buffer.byteLength(body) });
+      } catch (e) {
+        return sendJson(res, 500, { ok: false, error: "write error" });
+      }
+    });
+    return;
+  }
+
   // 保存
   if (req.method === "POST" && pathname === "/api/save") {
     let body = "";

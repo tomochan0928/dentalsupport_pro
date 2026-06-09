@@ -24,7 +24,17 @@
   .dot.online { background: #7ff0a8; box-shadow: 0 0 6px #7ff0a8; }
   .dot.offline { background: #ffd36b; box-shadow: 0 0 6px #ffd36b; }
 
-  .layout { display: grid; grid-template-columns: 290px 1fr 320px; gap: 14px; padding: 14px; align-items: start; }
+  .layout { display: grid; grid-template-columns: 290px 1fr; gap: 14px; padding: 14px; align-items: start; }
+  .gear-btn { margin-left: 14px; background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.55); border-radius: 8px; padding: 7px 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .gear-btn:hover { background: rgba(255,255,255,.32); }
+  .modal-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(20,50,70,.45); display: flex; align-items: flex-start; justify-content: center; padding: 24px; overflow: auto; }
+  .modal-overlay[hidden] { display: none; }
+  .modal-card { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(10,40,60,.35); width: min(700px, 100%); max-height: calc(100vh - 48px); display: flex; flex-direction: column; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .modal-head h2 { margin: 0; font-size: 16px; color: var(--accent-dark); }
+  .modal-close { border: none; background: #eef4f8; color: var(--text); width: 34px; height: 34px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+  .modal-close:hover { background: #dce8ef; }
+  .modal-body { padding: 16px 18px; overflow: auto; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
   .panel h2 { margin: 0 0 10px; font-size: 14px; color: var(--accent-dark); border-bottom: 2px solid var(--line); padding-bottom: 6px; display: flex; align-items: center; gap: 6px; }
   .panel h3 { font-size: 13px; margin: 14px 0 6px; color: var(--text-soft); }
@@ -148,7 +158,7 @@
     .no-print { display: none !important; }
     .layout { display: block; padding: 0; }
     .panel { border: none; box-shadow: none; padding: 0; border-radius: 0; }
-    #rightPanel { display: none !important; }
+    #settingsModal, .gear-btn, #modePanel { display: none !important; }
     main, #leftPanel { width: 100%; }
 
     .print-head { display: block; border-bottom: 2px solid var(--accent-dark); padding-bottom: 8px; margin-bottom: 12px; }
@@ -174,6 +184,7 @@
     <span class="dot" id="connDot"></span>
     <span id="connText">サーバー未接続</span>
   </div>
+  <button class="gear-btn no-print" id="openSettings" title="医院共通設定・アップデート">⚙ 設定</button>
 </header>
 
 <div class="layout">
@@ -245,12 +256,16 @@
     <div class="legend" id="legend"></div>
   </main>
 
-  <!-- ============ 右：設定（医院共通） ============ -->
-  <aside class="panel no-print" id="rightPanel">
-    <h2>⚙️ 医院共通設定</h2>
-    <button class="btn ghost" id="toggleSettings" style="width:100%;">設定を開く ▼</button>
+</div>
 
-    <div class="settings-body" id="settingsBody">
+<!-- ============ 設定モーダル（歯車「設定」で開く・医院共通） ============ -->
+<div class="modal-overlay no-print" id="settingsModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>⚙️ 医院共通設定</h2>
+      <button class="modal-close" id="closeSettings" aria-label="閉じる" title="閉じる">✕</button>
+    </div>
+    <div class="modal-body">
       <div class="seg" style="margin-top:0;">
         <div class="seg-title">🏥 医院名（説明書に印刷）</div>
         <input type="text" id="clinicName" placeholder="例：○○歯科医院" autocomplete="off" />
@@ -275,9 +290,18 @@
         <p class="hint">「＋ 工程を追加」で歯に紐づく処置を追加（操作モードにも追加され、歯にマークすると本数×回数が反映）。「工程表に連動」ONで総回数へ加算。工程は1行＝1ステップ。</p>
         <div id="planEditor"></div>
       </div>
-    </div>
-  </aside>
 
+      <div class="seg">
+        <div class="seg-title">🔄 アプリの更新（アップデート）</div>
+        <p class="hint">新しい画面ファイル <b>index.html</b> を受け取ったら、ここで選んで「更新する」を押すだけ。サーバーPCのファイルを直接触らなくても、この画面から更新できます。更新後は各端末でページを再読み込みしてください。</p>
+        <input type="file" id="updateFile" accept=".html,text/html" />
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn" id="applyUpdateBtn">⬆ 更新する</button>
+        </div>
+        <p class="hint" id="updateStatus" style="margin-bottom:0;"></p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -593,10 +617,35 @@ function updateProcess() {
 }
 
 /* ================= 設定パネル ================= */
-const settingsBody = document.getElementById("settingsBody");
-document.getElementById("toggleSettings").addEventListener("click", function(){
-  const open = settingsBody.classList.toggle("open");
-  this.textContent = open ? "設定を閉じる ▲" : "設定を開く ▼";
+/* 設定モーダル：歯車「⚙設定」で開閉 */
+const settingsModal = document.getElementById("settingsModal");
+function openSettingsModal(){ settingsModal.hidden = false; }
+function closeSettingsModal(){ settingsModal.hidden = true; }
+document.getElementById("openSettings").addEventListener("click", openSettingsModal);
+document.getElementById("closeSettings").addEventListener("click", closeSettingsModal);
+settingsModal.addEventListener("click", (e) => { if (e.target === settingsModal) closeSettingsModal(); }); // 背景クリックで閉じる
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !settingsModal.hidden) closeSettingsModal(); });
+
+/* アプリの更新：選んだ index.html をサーバーへ送り、exeの隣に書き込む */
+document.getElementById("applyUpdateBtn").addEventListener("click", async () => {
+  const st = document.getElementById("updateStatus");
+  const f = document.getElementById("updateFile").files[0];
+  if (!f) { st.textContent = "⚠ ファイル（index.html）を選んでください。"; return; }
+  const text = await f.text();
+  if (!/<html[\s>]/i.test(text)) {
+    if (!confirm("HTMLファイルではないようです。このまま更新しますか？")) return;
+  }
+  st.textContent = "更新中…";
+  try {
+    const res = await fetch(API_BASE + "/api/update-ui", {
+      method: "POST", headers: { "Content-Type": "text/html; charset=utf-8" }, body: text
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    st.textContent = "✅ 更新しました。画面を再読み込みします…";
+    setTimeout(() => location.reload(), 900);
+  } catch (e) {
+    st.textContent = "⚠ 更新できませんでした（サーバー未接続の可能性）：" + e.message;
+  }
 });
 const TYPE_LABEL = { caries:"う蝕(部位)", apex:"根尖", missing:"欠損", whole:"着色" };
 

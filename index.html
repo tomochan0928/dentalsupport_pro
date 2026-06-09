@@ -322,18 +322,20 @@ const GROUPS = [
   { key:"problem", label:"プロブレムリスト", note:"治療対象（工程表に連動）" },
   { key:"status",  label:"歯式作成",         note:"現在の口腔内の現状把握" }
 ];
-const PROBLEM_CATS = ["caries","periapical","prosth"];
+const PROBLEM_CATS = ["caries","periapical","prosth","implant"];
 const DEFAULT_MODES = [
   // ① プロブレムリスト（治療対象）
   { id:"caries", group:"problem", label:"う蝕", type:"caries", cat:"caries", locked:true,
     colors:{ occlusal:"#e6443a", adjacent:"#f59331", buccal:"#f5d623" } },
   { id:"A",      group:"problem", label:"根尖性歯周炎（A）", color:"#d8221a", type:"apex",  cat:"periapical", locked:true },
   { id:"prosth", group:"problem", label:"補綴（要処置）",    color:"#8e7cf0", type:"whole", cat:"prosth",     locked:true },
+  { id:"implant", group:"problem", label:"インプラント",     color:"#5b6b76", type:"implant", cat:"implant",  locked:true },
   // ② 歯式作成（現状把握）
   { id:"X",       group:"status", label:"欠損",           color:"#8597a4", type:"missing", cat:"defect",  locked:true },
   { id:"bridge",  group:"status", label:"ブリッジ",       color:"#c0894f", type:"bridge",  cat:"bridge",  locked:true },
   { id:"crownex", group:"status", label:"補綴（装着済）", color:"#7fa8c9", type:"whole",   cat:"crownex", locked:true },
   { id:"rroot",   group:"status", label:"残根",           color:"#8a5a3c", type:"rroot",   cat:"rroot",   locked:true },
+  { id:"implant_st", group:"status", label:"インプラント", color:"#5b6b76", type:"implant", cat:"implant_st", locked:true },
   { id:"done",    group:"status", label:"治療済み(充填/CR)",   color:"#5aa46a", type:"whole", cat:"done",  locked:false },
   { id:"watch",   group:"status", label:"要観察(CO/初期う蝕)", color:"#3fb6dd", type:"whole", cat:"watch", locked:false }
 ];
@@ -345,6 +347,8 @@ const DEFAULT_PLAN = {
   bridge:     { label:"ブリッジ",       steps:[], visits:0, linked:false },
   crownex:    { label:"補綴（装着済）", steps:[], visits:0, linked:false },
   rroot:      { label:"残根",           steps:[], visits:0, linked:false },
+  implant:    { label:"インプラント",   steps:["1.診査・診断（CT）","2.一次手術（埋入）","3.治癒待ち（オッセオインテグレーション）","4.二次手術","5.印象","6.上部構造セット"], visits:6, linked:true },
+  implant_st: { label:"インプラント（装着済）", steps:[], visits:0, linked:false },
   done:       { label:"治療済み(充填/CR)",   steps:[], visits:0, linked:false },
   watch:      { label:"要観察(CO/初期う蝕)", steps:[], visits:0, linked:false }
 };
@@ -394,6 +398,38 @@ function toothMetrics(t) {
     return { hw, H, crownH, occ, buc, apexX: t.apx, apexY: t.apy, ctop: t.top, cbot: t.cerv, ht: t.top, hb: t.bot, bnd:(occ+buc)/2, occLower:false };
   }
 }
+/* インプラント体（フィクスチャー）を根の領域に描画。歯冠は現状のまま（restorecrownで描き直し）。
+   歯頚線(cervY)を上端、根尖(apexY)方向へ伸ばす＝上顎は上向き・下顎は下向きに自動で向く。 */
+function implantSVG(t, m, id) {
+  const cx = t.cx, cervY = t.cerv, apexY = m.apexY;
+  const s = apexY - cervY;                 // 符号付き長さ（上顎=負/上向き, 下顎=正/下向き）
+  const fhw = m.hw * 0.56;                  // フィクスチャー半幅
+  const Y = u => cervY + s * u;
+  const bodyT0 = 0.13, apexT0 = 0.85, nT = 8;
+  const collarHW = fhw, neckHW = fhw * 0.84;
+  const P = (hx, u) => `${(cx + hx).toFixed(1)},${Y(u).toFixed(1)}`;
+  const R = [];                             // 右側のねじ山（鋸歯状）
+  for (let k = 0; k <= nT; k++) {
+    const u0 = bodyT0 + (apexT0 - bodyT0) * k / nT;
+    const hw = neckHW * (1 - 0.18 * k / nT);
+    R.push([hw, u0]);
+    if (k < nT) R.push([hw * 0.78, u0 + (apexT0 - bodyT0) / nT * 0.5]);
+  }
+  let d = `M ${P(-collarHW,0)} L ${P(collarHW,0)} L ${P(neckHW,bodyT0)} `;
+  R.forEach(([hx,u]) => d += `L ${P(hx,u)} `);
+  const last = R[R.length-1];
+  d += `Q ${P(neckHW*0.45,0.99)} ${P(0,1.0)} Q ${P(-neckHW*0.45,0.99)} ${P(-last[0],last[1])} `;
+  for (let i = R.length-1; i >= 0; i--) d += `L ${P(-R[i][0],R[i][1])} `;
+  d += `L ${P(-neckHW,bodyT0)} Z`;
+  let lines = "";                           // 内部のねじ山ライン
+  for (let k = 0; k < nT; k++) {
+    const um = bodyT0 + (apexT0 - bodyT0) * (k + 0.5) / nT;
+    const hw = neckHW * (1 - 0.18 * (k + 0.5) / nT) * 0.72;
+    lines += `<line x1="${(cx-hw).toFixed(1)}" y1="${Y(um).toFixed(1)}" x2="${(cx+hw).toFixed(1)}" y2="${Y(um).toFixed(1)}"/>`;
+  }
+  const sw = Math.max(fhw * 0.09, 3);
+  return `<g class="mk implant" data-id="${id}" clip-path="url(#cl_${id})" fill="#eef2f5" stroke="#2b3942" stroke-width="${sw.toFixed(1)}" stroke-linejoin="round" stroke-linecap="round"><path d="${d}"/><g stroke-width="${(sw*0.75).toFixed(1)}">${lines}</g></g>`;
+}
 function initToothData() {
   toothData = {};
   TEETH_GEOM.forEach(t => { toothData[t.id] = { surf:{O:false,Cm:false,Cd:false,B:false}, marks:{}, state:null, bridge:false }; });
@@ -432,6 +468,7 @@ function buildOverlay() {
     eraseMarks += `<rect class="mk eraseall" data-id="${id}" x="${x-hw-3}" y="${hT-3}" width="${hw*2+6}" height="${hH+6}" fill="#ffffff"/>`;
     eraseMarks += `<g class="mk restorecrown" data-id="${id}" mask="url(#toothcrownf)" clip-path="url(#cl_${id})"><use href="#chartimg"/></g>`;
     eraseMarks += `<g class="mk restoreroot" data-id="${id}" mask="url(#toothrootf)" clip-path="url(#cl_${id})"><use href="#chartimg"/></g>`;
+    eraseMarks += implantSVG(t, m, id);
     // クリックゾーン（部位指定）
     const occTop = m.occLower ? m.bnd : hT, occH = m.occLower ? (m.hb-m.bnd) : (m.bnd-hT);
     const bucTop = m.occLower ? hT : m.bnd, bucH = m.occLower ? (m.bnd-hT) : (m.hb-m.bnd);
@@ -471,16 +508,17 @@ function renderTooth(id) {
   const stMode = d.state ? modeById(d.state) : null;
   const isMissing = !!(stMode && stMode.type === "missing"); // 欠損
   const isRroot   = !!(stMode && stMode.type === "rroot");   // 残根=歯冠を削除
+  const isImplant = !!(stMode && stMode.type === "implant"); // インプラント=根をフィクスチャーに置換・歯冠は現状
   const isPontic  = isMissing && d.bridge;                   // ブリッジのポンティック=歯冠を残す
-  const altered = isMissing || isRroot;
-  // う蝕の部位マーク（歯冠が無い/根が無い時は隠す）
+  const altered = isMissing || isRroot || isImplant;
+  // う蝕の部位マーク（歯冠が無い/根が無い/インプラント時は隠す）
   SURFACES.forEach(sf => {
     const on = !altered && !!d.surf[sf];
     ov.querySelectorAll(`.mk.surf[data-id="${id}"][data-surface="${sf}"]`).forEach(e => e.classList.toggle("on", on));
   });
   // 根尖マーク
   apexModes().forEach(m => {
-    const on = !isMissing && !!d.marks[m.id];
+    const on = !isMissing && !isImplant && !!d.marks[m.id];
     ov.querySelectorAll(`.mk.part[data-id="${id}"][data-mode="${m.id}"]`).forEach(e => e.classList.toggle("on", on));
   });
   // 歯全体着色
@@ -489,8 +527,9 @@ function renderTooth(id) {
   else wholeEl.classList.remove("on");
   // 欠損=歯を完全に削除（全消去）。ただしブリッジのポンティックは歯冠を残す。残根=根を残す
   ov.querySelectorAll(`.mk.eraseall[data-id="${id}"]`).forEach(e => e.classList.toggle("on", altered));
-  ov.querySelectorAll(`.mk.restorecrown[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isPontic));
+  ov.querySelectorAll(`.mk.restorecrown[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isPontic || isImplant));
   ov.querySelectorAll(`.mk.restoreroot[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isRroot));
+  ov.querySelectorAll(`.mk.implant[data-id="${id}"]`).forEach(e => e.classList.toggle("on", isImplant));
 }
 function renderAllTeeth() { Object.keys(toothData).forEach(renderTooth); renderBridges(); }
 
@@ -581,7 +620,7 @@ function updateProcess() {
     const cats = new Set();
     if (cm && (d.surf.O || d.surf.Cm || d.surf.Cd || d.surf.B)) cats.add(cm.cat);
     apexModes().forEach(m => { if (d.marks[m.id]) cats.add(m.cat); });
-    if (stMode && stMode.type === "whole") cats.add(stMode.cat);
+    if (stMode && (stMode.type === "whole" || stMode.type === "implant")) cats.add(stMode.cat);
     cats.forEach(c => { counts[c] = (counts[c]||0)+1; });
   });
   const procList = document.getElementById("procList");

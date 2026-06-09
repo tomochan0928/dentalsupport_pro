@@ -28,6 +28,18 @@ DentalSupport Pro  かんたん導入（Windows・サーバーPC用）
   ・止めるときは stop-server.bat。
   ・自動起動をやめるときは autostart-uninstall.vbs。
 
+■ 画面（アプリ）を更新するとき … index.html を差し替えるだけ
+  exe と同じフォルダにある index.html が画面の本体です。
+  新しい index.html を受け取ったら、次の手順で更新できます。
+    1. stop-server.bat でサーバーを停止（自動起動で動いている場合）
+       または黒い画面を閉じる
+    2. 古い index.html を、新しい index.html で上書きコピー
+    3. DentalSupportPro.exe を起動し直す（自動起動の場合はPC再起動でもOK）
+  ・exe本体（大きいファイル）の入れ替えは不要です。
+  ・起動時の黒い画面に「画面ファイル : exe隣の index.html（差し替えで更新可）」
+    と出ていれば、差し替えた画面が使われています。
+  ・各端末（iPad等）は、開き直す（再読み込み）と新しい画面になります。
+
 ■ 注意
   ・Node.js のインストールは不要です。
   ・インターネット／クラウドは一切使いません（院内LANのみ）。

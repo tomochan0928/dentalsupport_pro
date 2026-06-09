@@ -39,6 +39,7 @@ def build(stage, items):
 # サーバーPC用
 build("DentalSupportPro", [
     ("bin","dist/DentalSupportPro.exe","DentalSupportPro.exe"),
+    ("bin","index.html","index.html"),  # 差し替えで画面更新できるよう同梱（exeの隣に置く）
     ("vbs","start-hidden.vbs","start-hidden.vbs"),
     ("vbs","autostart-install.vbs","autostart-install.vbs"),
     ("vbs","autostart-uninstall.vbs","autostart-uninstall.vbs"),

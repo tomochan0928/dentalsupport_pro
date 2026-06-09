@@ -125,9 +125,15 @@ const server = http.createServer((req, res) => {
     const file = path.join(STATIC_DIR, rel);
     const types = { ".html":"text/html; charset=utf-8", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".webp":"image/webp", ".svg":"image/svg+xml", ".css":"text/css", ".js":"text/javascript" };
     const ext = path.extname(file).toLowerCase();
-    if (types[ext] && fs.existsSync(file) && fs.statSync(file).isFile()) {
+    // 差し替え対応：exeの隣(BASE_DIR)に同名ファイルがあれば優先し、無ければ同梱版(STATIC_DIR)を配信。
+    // これにより index.html を1個差し替えるだけで画面を更新できる（exe再ビルド不要）。
+    const candidates = [];
+    if (BASE_DIR !== STATIC_DIR) candidates.push(path.join(BASE_DIR, rel));
+    candidates.push(file);
+    const found = candidates.find(f => fs.existsSync(f) && fs.statSync(f).isFile());
+    if (types[ext] && found) {
       res.writeHead(200, { "Content-Type": types[ext] });
-      return res.end(fs.readFileSync(file));
+      return res.end(fs.readFileSync(found));
     }
   }
 
@@ -169,6 +175,8 @@ server.listen(PORT, HOST, () => {
   console.log(`  このPCで開く : ${local}`);
   lanIPs().forEach(ip => console.log(`  院内の他端末 : http://${ip}:${PORT}`));
   console.log(`  データ保存先 : ${DATA_DIR}`);
+  const extIndex = BASE_DIR !== STATIC_DIR && fs.existsSync(path.join(BASE_DIR, "index.html"));
+  console.log(`  画面ファイル : ${extIndex ? "exe隣の index.html（差し替えで更新可）" : "exe同梱版"}`);
   console.log("--------------------------------------------------");
   console.log("  ※ このウィンドウは開いたままにしてください（閉じると停止）");
   console.log("==================================================");

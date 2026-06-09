@@ -785,8 +785,16 @@ document.getElementById("planEditor").addEventListener("input", (e) => {
 document.getElementById("addProcBtn").addEventListener("click", () => addModeToGroup("problem"));
 
 /* ================= 医院共通設定（保存・読込） ================= */
+// 保存済み設定に、後から追加された既定モード（例：インプラント）を補完する。
+// これが無いと、過去に保存した設定が新しい既定モードを隠してしまう。
+function mergeDefaultModes() {
+  const have = new Set(modes.map(m => m.id));
+  DEFAULT_MODES.forEach(dm => { if (!have.has(dm.id)) modes.push(structuredClone(dm)); });
+  Object.keys(DEFAULT_PLAN).forEach(cat => { if (!(cat in plan)) plan[cat] = structuredClone(DEFAULT_PLAN[cat]); });
+}
 function applyClinicSettings(s) {
   if (s && Array.isArray(s.modes) && s.plan) { modes = structuredClone(s.modes); plan = structuredClone(s.plan); }
+  mergeDefaultModes();
   ensureGroups();
   if (s && typeof s.clinicName === "string") document.getElementById("clinicName").value = s.clinicName;
   if (!modeById(currentMode)) currentMode = modes[0].id;

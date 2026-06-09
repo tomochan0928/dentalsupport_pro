@@ -154,7 +154,9 @@ const server = http.createServer((req, res) => {
     candidates.push(file);
     const found = candidates.find(f => fs.existsSync(f) && fs.statSync(f).isFile());
     if (types[ext] && found) {
-      res.writeHead(200, { "Content-Type": types[ext] });
+      // HTML はキャッシュさせない（更新後に古い画面が残らないように）。画像等は短時間キャッシュ可。
+      const cache = ext === ".html" ? "no-cache, no-store, must-revalidate" : "no-cache";
+      res.writeHead(200, { "Content-Type": types[ext], "Cache-Control": cache });
       return res.end(fs.readFileSync(found));
     }
   }

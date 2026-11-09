@@ -56,8 +56,25 @@
   .est-tot { margin-top:12px; margin-left:auto; width:min(340px,100%); font-size:14px; }
   .est-tot .row { display:flex; justify-content:space-between; padding:4px 0; }
   .est-tot .row.total { border-top:2px solid var(--accent-dark); margin-top:4px; padding-top:7px; font-size:20px; font-weight:800; color:var(--accent-dark); }
-  .est-tot input { width:92px; border:1px solid var(--line); border-radius:6px; padding:4px 6px; text-align:right; font:inherit; }
+  .est-tot input { width:92px !important; display:inline-block; border:1px solid var(--line); border-radius:6px; padding:4px 6px; text-align:right; font:inherit; }
+  .est-tot .row > span:last-child { white-space:nowrap; }
   .estimate-doc { display:none; }
+  .tp-tog { border:1px solid var(--line); background:#fff; border-radius:7px; padding:7px 10px; font:inherit; font-size:12.5px; cursor:pointer; text-align:left; width:100%; color:var(--text); }
+  .tp-tog b { color:var(--accent-dark); }
+  .tp { margin-top:7px; padding:8px; border:1px dashed #bcd3df; border-radius:8px; background:#f6fbfd; }
+  .tp-row { display:flex; justify-content:center; align-items:center; gap:3px; }
+  .tp-row + .tp-row { border-top:1.5px solid #567; padding-top:4px; margin-top:4px; }
+  .tp-sep { width:2px; align-self:stretch; background:#567; margin:0 4px; }
+  .tp-t { width:30px; height:30px; border:1px solid var(--line); border-radius:6px; background:#fff; font-weight:700; font-size:13px; cursor:pointer; color:var(--text); }
+  .tp-t.on { background:#f2b33d; border-color:#c98d14; color:#fff; }
+  .tp-q { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+  .tp-q button { border:1px solid var(--accent); color:var(--accent-dark); background:#fff; border-radius:7px; padding:5px 10px; font-size:12px; font-weight:700; cursor:pointer; }
+  .tp-lr { font-size:11px; color:var(--text-soft); width:16px; text-align:center; }
+  .est-photos { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .est-photo { position:relative; width:150px; height:110px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#eef4f8; }
+  .est-photo img { width:100%; height:100%; object-fit:cover; }
+  .est-photo button { position:absolute; top:4px; right:4px; border:none; border-radius:6px; background:rgba(0,0,0,.55); color:#fff; cursor:pointer; padding:3px 7px; }
+  .est-photo-add { width:150px; height:110px; border:2px dashed #9cc7d8; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:700; color:var(--accent-dark); cursor:pointer; background:#f6fbfd; }
   .menu-row { border:1px solid var(--line); border-radius:8px; padding:8px; margin-bottom:8px; background:#fff; display:grid; grid-template-columns:1fr 104px 40px; gap:6px; align-items:center; }
   .menu-row textarea { grid-column:1 / -1; min-height:34px; resize:vertical; }
   .menu-row input, .menu-row textarea { border:1px solid var(--line); border-radius:6px; padding:6px; font:inherit; box-sizing:border-box; width:100%; }
@@ -203,24 +220,38 @@
     /* 見積書の印刷（body.print-estimate のときだけ見積書を出す） */
     body.print-estimate .layout, body.print-estimate header, body.print-estimate #toast, body.print-estimate .modal-overlay { display: none !important; }
     body.print-estimate .estimate-doc { display: block; color:#111; }
-    .estimate-doc .ed-title { text-align:center; font-size:26px; font-weight:800; letter-spacing:10px; margin:0 0 2px; }
-    .estimate-doc .ed-clinic { text-align:right; font-size:13px; line-height:1.5; }
-    .estimate-doc .ed-top { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-top:10px; }
-    .estimate-doc .ed-patient { font-size:18px; font-weight:700; border-bottom:2px solid #333; padding:0 24px 4px 4px; }
-    .estimate-doc .ed-sub { font-size:12px; color:#555; margin-top:4px; }
-    .estimate-doc table.ed-tb { width:100%; border-collapse:collapse; margin-top:14px; }
-    .estimate-doc .ed-tb th, .estimate-doc .ed-tb td { border:1px solid #777; padding:7px 9px; vertical-align:top; }
-    .estimate-doc .ed-tb th { background:#edeff1; font-size:12px; }
-    .estimate-doc .ed-tb .num { text-align:right; white-space:nowrap; }
-    .estimate-doc .ed-tb .ed-nm { font-weight:700; }
-    .estimate-doc .ed-tb .ed-ds { font-size:11px; color:#444; margin-top:3px; }
-    .estimate-doc .ed-sums { width:52%; margin-left:auto; border-collapse:collapse; margin-top:12px; }
-    .estimate-doc .ed-sums td { padding:6px 10px; font-size:14px; }
-    .estimate-doc .ed-sums td.lbl { color:#555; } .estimate-doc .ed-sums td.val { text-align:right; white-space:nowrap; font-weight:700; }
-    .estimate-doc .ed-sums tr.grand td { border-top:2px solid #333; font-size:19px; font-weight:800; }
-    .estimate-doc .ed-note { margin-top:16px; border:1px solid #999; border-radius:6px; padding:9px 11px; font-size:12px; white-space:pre-wrap; }
-    .estimate-doc .ed-note b { display:block; margin-bottom:3px; }
-    .estimate-doc .ed-foot { margin-top:18px; font-size:11px; color:#555; border-top:1px dashed #aaa; padding-top:8px; }
+    .estimate-doc { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size:12.5px; }
+    .estimate-doc .e-head { display:grid; grid-template-columns:1fr auto 1fr; align-items:end; }
+    .estimate-doc .e-title { font-size:24px; font-weight:800; letter-spacing:6px; text-align:center; }
+    .estimate-doc .e-date { text-align:right; font-size:13px; }
+    .estimate-doc .e-patient { display:inline-block; margin-top:14px; font-size:18px; font-weight:700; border-bottom:1.5px solid #222; padding:0 30px 3px 4px; }
+    .estimate-doc .e-rule { border:0; border-top:1.5px solid #333; margin:14px 0 8px; }
+    .estimate-doc .e-body { display:grid; grid-template-columns:42% 58%; gap:12px; align-items:start; }
+    .estimate-doc .e-arch svg { width:100%; height:auto; display:block; }
+    .estimate-doc .e-item { border-bottom:1px solid #444; padding:6px 2px 8px; page-break-inside:avoid; }
+    .estimate-doc .e-pal { display:flex; align-items:center; gap:4px; font-size:10px; margin-bottom:4px; }
+    .estimate-doc .e-pal table { border-collapse:collapse; }
+    .estimate-doc .e-pal td { width:84px; height:15px; font-size:10.5px; letter-spacing:1px; padding:0 4px; white-space:nowrap; }
+    .estimate-doc .e-pal td.ur { border-right:1px solid #222; border-bottom:1px solid #222; text-align:right; }
+    .estimate-doc .e-pal td.ul { border-bottom:1px solid #222; text-align:left; }
+    .estimate-doc .e-pal td.lr { border-right:1px solid #222; text-align:right; }
+    .estimate-doc .e-pal td.ll { text-align:left; }
+    .estimate-doc .e-pal .all { font-size:11px; font-weight:700; margin-left:6px; }
+    .estimate-doc .e-nm { font-size:14px; font-weight:700; }
+    .estimate-doc .e-calc { font-size:14px; letter-spacing:.5px; margin:2px 0; white-space:nowrap; }
+    .estimate-doc .e-calc .op { margin:0 10px; }
+    .estimate-doc .e-ds { font-size:11px; color:#222; line-height:1.45; }
+    .estimate-doc .e-sub2 { display:flex; justify-content:flex-end; gap:24px; font-size:12px; color:#444; margin-top:10px; }
+    .estimate-doc .e-total { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; border-top:1.5px solid #333; border-bottom:1.5px solid #333; padding:9px 4px; margin-top:6px; }
+    .estimate-doc .e-total .lbl { text-align:center; font-size:16px; font-weight:700; letter-spacing:2px; }
+    .estimate-doc .e-total .val { text-align:right; font-size:20px; font-weight:800; }
+    .estimate-doc .e-total .tx { grid-column:3; text-align:right; font-size:10px; color:#555; }
+    .estimate-doc .e-photos { display:flex; gap:10px; margin-top:14px; }
+    .estimate-doc .e-photos img { height:42mm; max-width:32%; object-fit:cover; border:1px solid #bbb; }
+    .estimate-doc .e-note { border-top:1px solid #444; margin-top:14px; padding:8px 4px 10px 30px; font-size:12.5px; white-space:pre-wrap; line-height:1.6; }
+    .estimate-doc .e-foot { border-top:1px solid #444; margin-top:6px; padding-top:12px; text-align:center; }
+    .estimate-doc .e-foot .cn { font-size:17px; font-weight:700; letter-spacing:2px; }
+    .estimate-doc .e-foot .ad { font-size:11px; margin-top:4px; }
   }
 </style>
 </head>
@@ -320,6 +351,8 @@
       <div class="seg" style="margin-top:0;">
         <div class="seg-title">🏥 医院名（説明書に印刷）</div>
         <input type="text" id="clinicName" placeholder="例：○○歯科医院" autocomplete="off" />
+        <input type="text" id="clinicAddress" placeholder="住所（見積書に印刷）例：佐賀県鳥栖市…" autocomplete="off" style="margin-top:6px;" />
+        <input type="text" id="clinicTel" placeholder="電話番号（見積書に印刷）例：0942-00-0000" autocomplete="off" style="margin-top:6px;" />
         <p class="hint">ここで設定し「医院共通設定を保存」で固定されます。全患者・印刷に適用。</p>
       </div>
       <div class="clinic-note">この設定は<b>医院共通</b>です。変更後「💾 医院共通設定を保存」を押すと、この医院の全患者に適用されます（患者データとは別に保存）。</div>
@@ -392,6 +425,12 @@
         <div class="row"><span>消費税率(%)</span><span><input type="number" id="estTax" min="0" max="100" step="1" value="10"> %</span></div>
         <div class="row total"><span>合計金額</span><span id="estTotal">¥0</span></div>
         <div class="row" style="font-size:11px;color:var(--text-soft);"><span>（税込価格・うち消費税）</span><span id="estTaxIncl">¥0</span></div>
+      </div>
+
+      <div class="seg" style="margin-top:12px;">
+        <div class="seg-title">📷 説明写真（最大3枚・印刷されます）</div>
+        <div class="est-photos" id="estPhotos"></div>
+        <input type="file" id="estPhotoFile" accept="image/*" hidden>
       </div>
 
       <div class="seg" style="margin-top:12px;">
@@ -473,7 +512,7 @@ const DEFAULT_MENU = [
   { name:"インプラント（1歯）",          unit:440000, desc:"人工歯根を埋入し被せ物を装着する治療一式です（1歯）。" },
   { name:"ファイバーコア（支台築造）",    unit:11000,  desc:"被せ物の土台を補強するファイバー製の芯です（1歯）。" }
 ];
-function defaultEstimate(){ return { patientName:"", items:[], taxRate:10, discount:0, note:"" }; }
+function defaultEstimate(){ return { patientName:"", items:[], taxRate:10, discount:0, note:"", photos:[] }; }
 const yen = n => "¥" + (Math.round(Number(n)||0)).toLocaleString("ja-JP");
 
 let modes = structuredClone(DEFAULT_MODES);
@@ -956,11 +995,13 @@ function applyClinicSettings(s) {
   mergeDefaultModes();
   ensureGroups();
   if (s && typeof s.clinicName === "string") document.getElementById("clinicName").value = s.clinicName;
+  if (s && typeof s.clinicAddress === "string") document.getElementById("clinicAddress").value = s.clinicAddress;
+  if (s && typeof s.clinicTel === "string") document.getElementById("clinicTel").value = s.clinicTel;
   if (!modeById(currentMode)) currentMode = modes[0].id;
   renderMenuEditor();
 }
 async function saveClinicSettings() {
-  const payload = { modes, plan, menu, clinicName: document.getElementById("clinicName").value };
+  const payload = { modes, plan, menu, clinicName: document.getElementById("clinicName").value, clinicAddress: document.getElementById("clinicAddress").value, clinicTel: document.getElementById("clinicTel").value };
   try {
     const res = await fetch(`${API_BASE}/api/settings`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
     if (!res.ok) throw new Error("HTTP "+res.status);
@@ -1054,6 +1095,7 @@ function applyEstimate(e){
   estimateData = (e && Array.isArray(e.items)) ? JSON.parse(JSON.stringify(e)) : defaultEstimate();
   if (typeof estimateData.taxRate !== "number") estimateData.taxRate = 10;
   if (typeof estimateData.discount !== "number") estimateData.discount = 0;
+  if (!Array.isArray(estimateData.photos)) estimateData.photos = [];
   if (!estModal.hidden) openEstimateModal(); // 開いていれば即反映
 }
 function applyToothData(src){
@@ -1090,14 +1132,76 @@ function renderMenuSelect(){
   sel.innerHTML = menu.map((m,i)=>`<option value="${i}">${escapeHtml(m.name)}（${yen(m.unit)}）</option>`).join("")
                   || `<option value="">（メニュー未登録）</option>`;
 }
+/* ---- 部位（歯番号）: コード UR1..UR8 / UL1..UL8 / LR1..LR8 / LL1..LL8（Palmer） ---- */
+const Q_ALL = ["UR","UL","LR","LL"];
+const Q_LABEL = { UR:"右上", UL:"左上", LR:"右下", LL:"左下" };
+const ALL_TEETH = Q_ALL.flatMap(q => [1,2,3,4,5,6,7,8].map(n => q+n));
+function palmerSummary(sel){
+  if (!sel.size) return "";
+  if (ALL_TEETH.every(c => sel.has(c))) return "全顎";
+  return Q_ALL.map(q => {
+    const ns = [1,2,3,4,5,6,7,8].filter(n => sel.has(q+n));
+    if (!ns.length) return "";
+    return ns.length === 8 ? `${Q_LABEL[q]}全体` : `${Q_LABEL[q]} ${ns.join(",")}`;
+  }).filter(Boolean).join("・");
+}
+function palmerCrossHTML(sel){
+  const all = sel.size && ALL_TEETH.every(c => sel.has(c));
+  const cell = (q, order) => all ? "" : order.filter(n => sel.has(q+n)).join("");
+  const desc = [8,7,6,5,4,3,2,1], asc = [1,2,3,4,5,6,7,8];
+  return `<div class="e-pal"><span>右</span><table>
+    <tr><td class="ur">${cell("UR",desc)}</td><td class="ul">${cell("UL",asc)}</td></tr>
+    <tr><td class="lr">${cell("LR",desc)}</td><td class="ll">${cell("LL",asc)}</td></tr>
+  </table><span>左</span>${all?'<span class="all">全顎</span>':""}</div>`;
+}
+/* 咬合面から見た歯列図（上顎=上・下顎=下、患者の右=図の左）。sel の歯をハイライト */
+function archSVG(sel){
+  const W = 300, H = 430, cx = 150;
+  const wU = [1.0,0.8,0.9,0.85,0.85,1.25,1.15,1.05], wL = [0.7,0.75,0.85,0.85,0.9,1.3,1.2,1.1];
+  const thMax = 96 * Math.PI / 180;
+  let out = "";
+  const arch = (upper) => {
+    const ws = upper ? wU : wL, tot = ws.reduce((a,b)=>a+b, 0), unit = thMax / tot;
+    const Rx = 118, Ry = 168, y0 = upper ? 16 : H - 16, s = unit * 135;
+    let acc = 0;
+    ws.forEach((w, i) => {
+      const n = i + 1, th = (acc + w/2) * unit; acc += w;
+      [-1, 1].forEach(side => {
+        const t = side * th;
+        const x = cx + Rx * Math.sin(t), dyv = Ry * (1 - Math.cos(t));
+        const y = upper ? y0 + dyv : y0 - dyv;
+        const ang = Math.atan2((upper ? 1 : -1) * Ry * Math.sin(t), Rx * Math.cos(t)) * 180 / Math.PI;
+        const code = (upper ? "U" : "L") + (side < 0 ? "R" : "L") + n, on = sel.has(code);
+        const rx = w * s * 0.44, ry = s * (n <= 3 ? 0.4 : n <= 5 ? 0.5 : 0.58);
+        out += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${ang.toFixed(1)})"><ellipse rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${on?"#f2b33d":"#fbfbfb"}" stroke="${on?"#a8730c":"#8d8d8d"}" stroke-width="1.2"/></g>`;
+        out += `<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="8" text-anchor="middle" fill="${on?"#4a3300":"#9a9a9a"}">${n}</text>`;
+      });
+    });
+  };
+  arch(true); arch(false);
+  out += `<text x="6" y="${H/2+5}" font-size="13">右</text><text x="${W-20}" y="${H/2+5}" font-size="13">左</text>`;
+  out += `<text x="${cx}" y="${H/2-6}" font-size="9" text-anchor="middle" fill="#888">上顎</text><text x="${cx}" y="${H/2+14}" font-size="9" text-anchor="middle" fill="#888">下顎</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">${out}</svg>`;
+}
+
+const estOpen = new Set(); // 部位ピッカーを開いている項目
 function estItemRow(it, idx){
+  const sel = new Set(it.toothSel || []), open = estOpen.has(idx);
+  const b = (q,n) => `<button type="button" class="tp-t ${sel.has(q+n)?"on":""}" data-t="${q}${n}">${n}</button>`;
+  const desc = [8,7,6,5,4,3,2,1], asc = [1,2,3,4,5,6,7,8];
+  const picker = open ? `<div class="tp">
+      <div class="tp-row"><span class="tp-lr">右</span>${desc.map(n=>b("UR",n)).join("")}<span class="tp-sep"></span>${asc.map(n=>b("UL",n)).join("")}<span class="tp-lr">左</span></div>
+      <div class="tp-row"><span class="tp-lr">右</span>${desc.map(n=>b("LR",n)).join("")}<span class="tp-sep"></span>${asc.map(n=>b("LL",n)).join("")}<span class="tp-lr">左</span></div>
+      <div class="tp-q"><button type="button" data-q="UR">右上顎</button><button type="button" data-q="LR">右下顎</button><button type="button" data-q="ALL">全顎</button><button type="button" data-q="UL">左上顎</button><button type="button" data-q="LL">左下顎</button><button type="button" data-q="CLR">クリア</button></div>
+    </div>` : "";
   return `<div class="est-item" data-idx="${idx}">
     <div class="r1">
       <input class="nm" type="text" data-k="name" value="${escAttr(it.name)}" placeholder="項目名（例：セラミッククラウン）">
       <button class="est-del" data-k="del" title="削除">🗑</button>
     </div>
+    <div style="margin-top:7px;"><button type="button" class="tp-tog" data-tpt>🦷 部位：<b>${escapeHtml(palmerSummary(sel) || "未選択")}</b>　${open?"▲ 閉じる":"▼ 歯を選ぶ"}</button>${picker}</div>
     <div class="r2">
-      <label class="f-bui">部位<input type="text" data-k="teeth" value="${escAttr(it.teeth||"")}" placeholder="例：上顎右6 / 全顎"></label>
+      <label class="f-bui">部位メモ（任意）<input type="text" data-k="teeth" value="${escAttr(it.teeth||"")}" placeholder="例：ブリッジ3歯分"></label>
       <label class="f-num">単価(税込)<input type="number" data-k="unit" min="0" step="100" value="${Number(it.unit)||0}"></label>
       <label class="f-num">数量<input type="number" data-k="qty" min="0" step="1" value="${Number(it.qty)||0}"></label>
       <label class="f-num">小計<div class="sub" data-sub>${yen((Number(it.unit)||0)*(Number(it.qty)||0))}</div></label>
@@ -1135,7 +1239,8 @@ function openEstimateModal(){
   document.getElementById("estTax").value = estimateData.taxRate;
   document.getElementById("estDiscount").value = estimateData.discount;
   document.getElementById("estNote").value = estimateData.note || "";
-  renderMenuSelect(); renderEstimateItems();
+  if (!Array.isArray(estimateData.photos)) estimateData.photos = [];
+  renderMenuSelect(); renderEstimateItems(); renderEstPhotos();
   estModal.hidden = false;
 }
 function closeEstimateModal(){ estModal.hidden = true; }
@@ -1145,11 +1250,11 @@ estModal.addEventListener("click", e => { if (e.target === estModal) closeEstima
 document.getElementById("estAddMenu").addEventListener("click", ()=>{
   const i = +document.getElementById("estMenuSel").value;
   const src = menu[i]; if (!src) { toast("メニューが未登録です", true); return; }
-  estimateData.items.push({ name:src.name, teeth:"", unit:Number(src.unit)||0, qty:1, desc:src.desc||"" });
+  estimateData.items.push({ name:src.name, teeth:"", toothSel:[], unit:Number(src.unit)||0, qty:1, desc:src.desc||"" });
   renderEstimateItems();
 });
 document.getElementById("estAddBlank").addEventListener("click", ()=>{
-  estimateData.items.push({ name:"", teeth:"", unit:0, qty:1, desc:"" });
+  estimateData.items.push({ name:"", teeth:"", toothSel:[], unit:0, qty:1, desc:"" });
   renderEstimateItems();
 });
 document.getElementById("estItems").addEventListener("input", e=>{
@@ -1159,8 +1264,25 @@ document.getElementById("estItems").addEventListener("input", e=>{
   recalcEstimate();
 });
 document.getElementById("estItems").addEventListener("click", e=>{
-  const del = e.target.closest("[data-k='del']"); if(!del) return;
-  const row = e.target.closest(".est-item"); estimateData.items.splice(+row.dataset.idx,1); renderEstimateItems();
+  const row = e.target.closest(".est-item"); if(!row) return;
+  const idx = +row.dataset.idx, it = estimateData.items[idx]; if(!it) return;
+  if (e.target.closest("[data-k='del']")) { estimateData.items.splice(idx,1); estOpen.clear(); renderEstimateItems(); return; }
+  if (e.target.closest("[data-tpt]")) { estOpen.has(idx) ? estOpen.delete(idx) : estOpen.add(idx); renderEstimateItems(); return; }
+  const sel = new Set(it.toothSel || []);
+  const t = e.target.closest("[data-t]");
+  const qb = e.target.closest("[data-q]");
+  if (t) { const c = t.dataset.t; sel.has(c) ? sel.delete(c) : sel.add(c); }
+  else if (qb) {
+    const q = qb.dataset.q;
+    if (q === "CLR") sel.clear();
+    else {
+      const codes = q === "ALL" ? ALL_TEETH : [1,2,3,4,5,6,7,8].map(n => q+n);
+      const full = codes.every(c => sel.has(c));
+      codes.forEach(c => full ? sel.delete(c) : sel.add(c));
+    }
+  } else return;
+  it.toothSel = ALL_TEETH.filter(c => sel.has(c));
+  renderEstimateItems();
 });
 document.getElementById("estName").addEventListener("input", e=> estimateData.patientName = e.target.value);
 document.getElementById("estNote").addEventListener("input", e=> estimateData.note = e.target.value);
@@ -1168,45 +1290,76 @@ document.getElementById("estTax").addEventListener("input", recalcEstimate);
 document.getElementById("estDiscount").addEventListener("input", recalcEstimate);
 document.addEventListener("keydown", e => { if (e.key==="Escape" && !estModal.hidden) closeEstimateModal(); });
 
+/* 説明写真（最大3枚・縮小してJPEG化） */
+function renderEstPhotos(){
+  const box = document.getElementById("estPhotos"); const ph = estimateData.photos || [];
+  box.innerHTML = ph.map((src,i)=>`<div class="est-photo"><img src="${src}" alt="説明写真${i+1}"><button type="button" data-pdel="${i}" title="削除">✕</button></div>`).join("")
+    + (ph.length < 3 ? `<div class="est-photo-add" data-padd>＋ 写真を追加<br><span style="font-weight:400;font-size:11px;">（撮影 / 選択）</span></div>` : "");
+}
+function loadImageScaled(file, max){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, max / Math.max(im.width, im.height));
+        const c = document.createElement("canvas"); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", 0.82));
+      };
+      im.onerror = reject; im.src = fr.result;
+    };
+    fr.onerror = reject; fr.readAsDataURL(file);
+  });
+}
+document.getElementById("estPhotos").addEventListener("click", e => {
+  if (e.target.closest("[data-padd]")) { document.getElementById("estPhotoFile").click(); return; }
+  const del = e.target.closest("[data-pdel]");
+  if (del) { estimateData.photos.splice(+del.dataset.pdel, 1); renderEstPhotos(); }
+});
+document.getElementById("estPhotoFile").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const url = await loadImageScaled(f, 1280);
+    (estimateData.photos = estimateData.photos || []).push(url); renderEstPhotos();
+  } catch (err) { toast("写真を読み込めませんでした", true); }
+});
+
 function renderEstimateDoc(){
-  let sub = 0; estimateData.items.forEach(it=> sub += (Number(it.unit)||0)*(Number(it.qty)||0));
-  const total = Math.max(0, sub - (Number(estimateData.discount)||0));
-  const rate = Number(estimateData.taxRate)||0;
-  const taxIncl = Math.round(total - total/(1+rate/100));
+  const items = estimateData.items.filter(it => (it.name||"").trim() || it.unit || it.qty);
+  let sub = 0; items.forEach(it => sub += (Number(it.unit)||0)*(Number(it.qty)||0));
+  const disc = Number(estimateData.discount)||0, total = Math.max(0, sub - disc);
+  const rate = Number(estimateData.taxRate)||0, taxIncl = Math.round(total - total/(1+rate/100));
   const clinic = document.getElementById("clinicName").value || "";
+  const addr = document.getElementById("clinicAddress").value || "";
+  const tel = document.getElementById("clinicTel").value || "";
   const name = (document.getElementById("estName").value || "").trim();
-  const chart = document.getElementById("estChart").value || "";
-  const dv = document.getElementById("estDate").value; const d = dv ? new Date(dv) : new Date();
-  const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-  const rows = estimateData.items.filter(it => (it.name||"").trim() || it.unit || it.qty).map((it,i)=>`
-    <tr>
-      <td class="num">${i+1}</td>
-      <td><div class="ed-nm">${escapeHtml(it.name||"")}</div>${it.desc?`<div class="ed-ds">${escapeHtml(it.desc)}</div>`:""}</td>
-      <td>${escapeHtml(it.teeth||"")}</td>
-      <td class="num">${yen(it.unit)}</td>
-      <td class="num">${Number(it.qty)||0}</td>
-      <td class="num">${yen((Number(it.unit)||0)*(Number(it.qty)||0))}</td>
-    </tr>`).join("");
+  const chart = (document.getElementById("estChart").value || "").trim();
+  const dv = document.getElementById("estDate").value; const d = dv ? new Date(dv + "T00:00:00") : new Date();
+  const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`;
+  const allSel = new Set(); items.forEach(it => (it.toothSel||[]).forEach(c => allSel.add(c)));
+  const itemsHtml = items.map(it => {
+    const u = Number(it.unit)||0, q = Number(it.qty)||0;
+    return `<div class="e-item">${palmerCrossHTML(new Set(it.toothSel||[]))}
+      <div class="e-nm">${escapeHtml(it.name||"")}${it.teeth?` <span style="font-weight:400;font-size:11px;">（${escapeHtml(it.teeth)}）</span>`:""}</div>
+      <div class="e-calc">${yen(u)}<span class="op">×</span>${q}<span class="op">＝</span>${yen(u*q)}</div>
+      ${it.desc?`<div class="e-ds">${escapeHtml(it.desc)}</div>`:""}</div>`;
+  }).join("");
+  const photos = (estimateData.photos||[]).map(src => `<img src="${src}" alt="">`).join("");
   document.getElementById("estimateDoc").innerHTML = `
-    <div class="ed-title">御 見 積 書</div>
-    <div class="ed-clinic">${escapeHtml(clinic)}</div>
-    <div class="ed-top">
-      <div><div class="ed-patient">${escapeHtml(name||"　")} 様</div>
-        <div class="ed-sub">${chart?`カルテ番号：${escapeHtml(chart)}　`:""}下記のとおりお見積り申し上げます。</div></div>
-      <div style="text-align:right;font-size:13px;">作成日：${dateStr}</div>
+    <div class="e-head"><span></span><div class="e-title">御見積書</div><div class="e-date">見積日　${dateStr}</div></div>
+    <div class="e-patient">${escapeHtml(chart)}${chart?"　":""}${escapeHtml(name||"　　　　")}　様</div>
+    <hr class="e-rule">
+    <div class="e-body">
+      <div class="e-arch">${archSVG(allSel)}</div>
+      <div class="e-items">${itemsHtml || '<div style="color:#888;padding:10px;">（項目なし）</div>'}</div>
     </div>
-    <table class="ed-tb">
-      <thead><tr><th style="width:34px;">#</th><th>項目・内容</th><th style="width:120px;">部位</th><th style="width:92px;">単価</th><th style="width:48px;">数量</th><th style="width:104px;">金額</th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="6" style="text-align:center;color:#888;">（項目なし）</td></tr>`}</tbody>
-    </table>
-    <table class="ed-sums">
-      <tr><td class="lbl">小計</td><td class="val">${yen(sub)}</td></tr>
-      ${estimateData.discount?`<tr><td class="lbl">値引き</td><td class="val">− ${yen(estimateData.discount)}</td></tr>`:""}
-      <tr class="grand"><td class="lbl">合計金額（税込）</td><td class="val">${yen(total)}</td></tr>
-      <tr><td class="lbl" style="font-size:11px;color:#777;">うち消費税（${rate}%）</td><td class="val" style="font-size:12px;color:#777;">${yen(taxIncl)}</td></tr>
-    </table>
-    ${estimateData.note?`<div class="ed-note"><b>備考</b>${escapeHtml(estimateData.note)}</div>`:""}
-    <div class="ed-foot">※ 本見積は自費（保険外）診療の概算です。有効期限内でも、診査・診断により治療内容・金額が変更となる場合があります。表示金額は税込です。</div>`;
+    ${disc?`<div class="e-sub2"><span>小計　${yen(sub)}</span><span>値引き　−${yen(disc)}</span></div>`:""}
+    <div class="e-total"><span></span><span class="lbl">御見積金額</span><span class="val">${yen(total)}</span><span class="tx">（税込・うち消費税${rate}%　${yen(taxIncl)}）</span></div>
+    ${photos?`<div class="e-photos">${photos}</div>`:""}
+    <div class="e-note">${escapeHtml(estimateData.note||"")}</div>
+    <div class="e-foot"><div class="cn">${escapeHtml(clinic)}</div>${addr?`<div class="ad">${escapeHtml(addr)}</div>`:""}${tel?`<div class="ad">TEL：${escapeHtml(tel)}</div>`:""}</div>`;
 }
 function printEstimate(){
   if (!estimateData.items.some(it=>(it.name||"").trim())) { toast("項目を1つ以上入力してください", true); return; }

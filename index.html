@@ -35,6 +35,32 @@
   .modal-close { border: none; background: #eef4f8; color: var(--text); width: 34px; height: 34px; border-radius: 8px; font-size: 16px; cursor: pointer; }
   .modal-close:hover { background: #dce8ef; }
   .modal-body { padding: 16px 18px; overflow: auto; }
+  .btn.gold { background: linear-gradient(120deg,#caa63f,#b1892c); }
+  .modal-card.wide { width: min(940px, 100%); }
+  /* 見積書エディタ */
+  .est-info { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px; }
+  .est-info label { font-size:11px; color:var(--text-soft); display:flex; flex-direction:column; gap:3px; }
+  .est-info input { border:1px solid var(--line); border-radius:7px; padding:7px 8px; font:inherit; }
+  .est-addrow { display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:#eef7fb; border:1px solid #bfe6f2; border-radius:9px; padding:8px 10px; margin-bottom:10px; }
+  .est-addrow select { flex:1; min-width:160px; border:1px solid var(--line); border-radius:7px; padding:7px; font:inherit; }
+  .est-item { border:1px solid var(--line); border-radius:9px; padding:10px; margin-bottom:10px; background:#fbfdff; }
+  .est-item .r1 { display:flex; gap:8px; align-items:center; }
+  .est-item .r1 .nm { flex:1; font-weight:700; }
+  .est-item .r2 { display:flex; gap:8px; margin-top:7px; flex-wrap:wrap; }
+  .est-item .r2 label { font-size:11px; color:var(--text-soft); display:flex; flex-direction:column; gap:2px; }
+  .est-item .r2 .f-bui { flex:2; min-width:120px; } .est-item .r2 .f-num { flex:1; min-width:84px; }
+  .est-item input, .est-item textarea, .est-item .sub { border:1px solid var(--line); border-radius:6px; padding:7px 8px; font:inherit; box-sizing:border-box; width:100%; }
+  .est-item .sub { background:#eef4f8; font-weight:700; color:var(--accent-dark); text-align:right; }
+  .est-item textarea { margin-top:7px; min-height:40px; resize:vertical; }
+  .est-del { border:none; background:#f3d9d9; color:#b23a3a; border-radius:7px; cursor:pointer; padding:7px 10px; font-weight:700; flex:none; }
+  .est-tot { margin-top:12px; margin-left:auto; width:min(340px,100%); font-size:14px; }
+  .est-tot .row { display:flex; justify-content:space-between; padding:4px 0; }
+  .est-tot .row.total { border-top:2px solid var(--accent-dark); margin-top:4px; padding-top:7px; font-size:20px; font-weight:800; color:var(--accent-dark); }
+  .est-tot input { width:92px; border:1px solid var(--line); border-radius:6px; padding:4px 6px; text-align:right; font:inherit; }
+  .estimate-doc { display:none; }
+  .menu-row { border:1px solid var(--line); border-radius:8px; padding:8px; margin-bottom:8px; background:#fff; display:grid; grid-template-columns:1fr 104px 40px; gap:6px; align-items:center; }
+  .menu-row textarea { grid-column:1 / -1; min-height:34px; resize:vertical; }
+  .menu-row input, .menu-row textarea { border:1px solid var(--line); border-radius:6px; padding:6px; font:inherit; box-sizing:border-box; width:100%; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
   .panel h2 { margin: 0 0 10px; font-size: 14px; color: var(--accent-dark); border-bottom: 2px solid var(--line); padding-bottom: 6px; display: flex; align-items: center; gap: 6px; }
   .panel h3 { font-size: 13px; margin: 14px 0 6px; color: var(--text-soft); }
@@ -173,6 +199,28 @@
     .legend { margin-top: 6px; }
     .print-plan { margin-top: 14px; page-break-inside: avoid; }
     .print-foot { margin-top: 18px; font-size: 11px; color: #555; border-top: 1px dashed #aaa; padding-top: 8px; }
+
+    /* 見積書の印刷（body.print-estimate のときだけ見積書を出す） */
+    body.print-estimate .layout, body.print-estimate header, body.print-estimate #toast, body.print-estimate .modal-overlay { display: none !important; }
+    body.print-estimate .estimate-doc { display: block; color:#111; }
+    .estimate-doc .ed-title { text-align:center; font-size:26px; font-weight:800; letter-spacing:10px; margin:0 0 2px; }
+    .estimate-doc .ed-clinic { text-align:right; font-size:13px; line-height:1.5; }
+    .estimate-doc .ed-top { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-top:10px; }
+    .estimate-doc .ed-patient { font-size:18px; font-weight:700; border-bottom:2px solid #333; padding:0 24px 4px 4px; }
+    .estimate-doc .ed-sub { font-size:12px; color:#555; margin-top:4px; }
+    .estimate-doc table.ed-tb { width:100%; border-collapse:collapse; margin-top:14px; }
+    .estimate-doc .ed-tb th, .estimate-doc .ed-tb td { border:1px solid #777; padding:7px 9px; vertical-align:top; }
+    .estimate-doc .ed-tb th { background:#edeff1; font-size:12px; }
+    .estimate-doc .ed-tb .num { text-align:right; white-space:nowrap; }
+    .estimate-doc .ed-tb .ed-nm { font-weight:700; }
+    .estimate-doc .ed-tb .ed-ds { font-size:11px; color:#444; margin-top:3px; }
+    .estimate-doc .ed-sums { width:52%; margin-left:auto; border-collapse:collapse; margin-top:12px; }
+    .estimate-doc .ed-sums td { padding:6px 10px; font-size:14px; }
+    .estimate-doc .ed-sums td.lbl { color:#555; } .estimate-doc .ed-sums td.val { text-align:right; white-space:nowrap; font-weight:700; }
+    .estimate-doc .ed-sums tr.grand td { border-top:2px solid #333; font-size:19px; font-weight:800; }
+    .estimate-doc .ed-note { margin-top:16px; border:1px solid #999; border-radius:6px; padding:9px 11px; font-size:12px; white-space:pre-wrap; }
+    .estimate-doc .ed-note b { display:block; margin-bottom:3px; }
+    .estimate-doc .ed-foot { margin-top:18px; font-size:11px; color:#555; border-top:1px dashed #aaa; padding-top:8px; }
   }
 </style>
 </head>
@@ -213,6 +261,9 @@
       <div class="btn-row">
         <button class="btn print" id="printBtn">🖨 印刷（患者用）</button>
         <button class="btn gray" id="clearBtn">🧹 全クリア</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn gold" id="estimateBtn">💴 見積書（自費診療）</button>
       </div>
 
     </div>
@@ -292,6 +343,14 @@
       </div>
 
       <div class="seg">
+        <div class="seg-title">💴 自費メニュー（見積マスタ）
+          <button class="btn ghost" id="addMenuBtn" style="padding:5px 9px;font-size:12px;">＋ メニュー追加</button>
+        </div>
+        <p class="hint">見積書で「＋追加」したときに呼び出す自費診療メニューです。名称・単価（税込）・説明を登録しておくと、見積作成がワンタップで行えます。🗑で削除。</p>
+        <div id="menuEditor"></div>
+      </div>
+
+      <div class="seg">
         <div class="seg-title">🔄 アプリの更新（アップデート）</div>
         <p class="hint">新しい画面ファイル <b>index.html</b> を受け取ったら、ここで選んで「更新する」を押すだけ。サーバーPCのファイルを直接触らなくても、この画面から更新できます。更新後は各端末でページを再読み込みしてください。</p>
         <input type="file" id="updateFile" accept=".html,text/html" />
@@ -303,6 +362,54 @@
     </div>
   </div>
 </div>
+
+<!-- ============ 見積書モーダル（自費診療） ============ -->
+<div class="modal-overlay no-print" id="estimateModal" hidden>
+  <div class="modal-card wide">
+    <div class="modal-head">
+      <h2>💴 お見積書（自費診療）</h2>
+      <button class="modal-close" id="closeEstimate" aria-label="閉じる" title="閉じる">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="est-info">
+        <label>患者氏名<input type="text" id="estName" placeholder="例：山田 太郎" autocomplete="off" style="min-width:180px;"></label>
+        <label>カルテ番号<input type="text" id="estChart" placeholder="患者番号" autocomplete="off" style="width:120px;"></label>
+        <label>作成日<input type="date" id="estDate"></label>
+      </div>
+
+      <div class="est-addrow">
+        <span style="font-size:12px;font-weight:700;color:var(--accent-dark);">メニューから追加：</span>
+        <select id="estMenuSel"></select>
+        <button class="btn" id="estAddMenu" style="flex:none;padding:8px 12px;">＋ 追加</button>
+        <button class="btn ghost" id="estAddBlank" style="flex:none;padding:8px 12px;">＋ 空の項目</button>
+      </div>
+
+      <div id="estItems"></div>
+
+      <div class="est-tot">
+        <div class="row"><span>小計</span><span id="estSub">¥0</span></div>
+        <div class="row"><span>値引き</span><span>− ¥<input type="number" id="estDiscount" min="0" step="100" value="0"></span></div>
+        <div class="row"><span>消費税率(%)</span><span><input type="number" id="estTax" min="0" max="100" step="1" value="10"> %</span></div>
+        <div class="row total"><span>合計金額</span><span id="estTotal">¥0</span></div>
+        <div class="row" style="font-size:11px;color:var(--text-soft);"><span>（税込価格・うち消費税）</span><span id="estTaxIncl">¥0</span></div>
+      </div>
+
+      <div class="seg" style="margin-top:12px;">
+        <div class="seg-title">備考</div>
+        <textarea id="estNote" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:7px;padding:8px;font:inherit;box-sizing:border-box;" placeholder="例：調整料として1回5,500円かかります（月1回程度）。装着後5年間保証します。"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn print" id="estPrint">🖨 見積書を印刷</button>
+        <button class="btn" id="estSave">💾 この患者に保存</button>
+      </div>
+      <p class="hint">「メニュー」の内容（名称・単価・説明）は「⚙設定 → 自費メニュー（見積マスタ）」で編集でき、医院共通で保存されます。価格は税込でご入力ください。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 見積書の印刷用（印刷時のみ表示） -->
+<div class="estimate-doc" id="estimateDoc"></div>
 
 <div id="toast"></div>
 
@@ -356,8 +463,23 @@ const DEFAULT_PLAN = {
 function ensureGroups(){ modes.forEach(m => { if (!m.group) m.group = PROBLEM_CATS.includes(m.cat) ? "problem" : "status"; }); }
 const SURFACES = ["O","Cm","Cd","B"]; // 咬合面/近心隣接面/遠心隣接面/頬側面
 
+/* 自費メニュー（見積マスタ）。単価は税込の目安。医院共通設定で編集可。 */
+const DEFAULT_MENU = [
+  { name:"インビザライン 精密検査",      unit:49500,  desc:"マウスピース矯正の精密検査です。歯型スキャン・3Dシミュレーション・治療計画作成を行います。" },
+  { name:"インビザライン矯正治療",        unit:748000, desc:"コンピュータ上の治療計画に基づき、マウスピース矯正治療を行います（装置一式）。" },
+  { name:"セラミッククラウン",            unit:132000, desc:"自然な見た目で変色しにくいセラミックの被せ物です（1歯）。" },
+  { name:"オールセラミックインレー",      unit:66000,  desc:"白く目立ちにくいセラミックの詰め物（部分的な被せ物）です（1歯）。" },
+  { name:"ホワイトニング（オフィス）",    unit:33000,  desc:"診療室で行う歯のホワイトニングです（1回）。" },
+  { name:"インプラント（1歯）",          unit:440000, desc:"人工歯根を埋入し被せ物を装着する治療一式です（1歯）。" },
+  { name:"ファイバーコア（支台築造）",    unit:11000,  desc:"被せ物の土台を補強するファイバー製の芯です（1歯）。" }
+];
+function defaultEstimate(){ return { patientName:"", items:[], taxRate:10, discount:0, note:"" }; }
+const yen = n => "¥" + (Math.round(Number(n)||0)).toLocaleString("ja-JP");
+
 let modes = structuredClone(DEFAULT_MODES);
 let plan  = structuredClone(DEFAULT_PLAN);
+let menu  = structuredClone(DEFAULT_MENU);
+let estimateData = defaultEstimate();
 let currentMode = "caries";
 let activeGroup = "problem";
 let toothData = {};
@@ -735,6 +857,31 @@ function renderPlanEditor() {
 }
 function refreshModeUI() { renderModeButtons(); renderLegend(); buildOverlay(); renderAllTeeth(); }
 
+/* 自費メニュー（見積マスタ）の編集 */
+function renderMenuEditor() {
+  const box = document.getElementById("menuEditor");
+  if (!box) return;
+  box.innerHTML = menu.map((m,idx)=>`
+    <div class="menu-row" data-idx="${idx}">
+      <input type="text" data-k="name" value="${escAttr(m.name)}" placeholder="メニュー名">
+      <input type="number" data-k="unit" min="0" step="100" value="${Number(m.unit)||0}" title="単価(税込)">
+      <button class="est-del" data-k="del" title="削除">🗑</button>
+      <textarea data-k="desc" placeholder="説明文">${escapeHtml(m.desc||"")}</textarea>
+    </div>`).join("") || `<p class="hint">（メニュー未登録）</p>`;
+}
+document.getElementById("menuEditor").addEventListener("input", e=>{
+  const row = e.target.closest(".menu-row"); if(!row) return;
+  const m = menu[+row.dataset.idx]; const k = e.target.dataset.k; if(!m||!k) return;
+  m[k] = (k==="unit") ? (Number(e.target.value)||0) : e.target.value;
+});
+document.getElementById("menuEditor").addEventListener("click", e=>{
+  const del = e.target.closest("[data-k='del']"); if(!del) return;
+  menu.splice(+e.target.closest(".menu-row").dataset.idx, 1); renderMenuEditor();
+});
+document.getElementById("addMenuBtn").addEventListener("click", ()=>{
+  menu.push({ name:"", unit:0, desc:"" }); renderMenuEditor();
+});
+
 document.getElementById("modeEditor").addEventListener("input", (e) => {
   const row = e.target.closest(".mode-row"); if (!row) return;
   const m = modes[+row.dataset.idx]; const k = e.target.dataset.k;
@@ -805,13 +952,15 @@ function mergeDefaultModes() {
 }
 function applyClinicSettings(s) {
   if (s && Array.isArray(s.modes) && s.plan) { modes = structuredClone(s.modes); plan = structuredClone(s.plan); }
+  if (s && Array.isArray(s.menu)) menu = structuredClone(s.menu);
   mergeDefaultModes();
   ensureGroups();
   if (s && typeof s.clinicName === "string") document.getElementById("clinicName").value = s.clinicName;
   if (!modeById(currentMode)) currentMode = modes[0].id;
+  renderMenuEditor();
 }
 async function saveClinicSettings() {
-  const payload = { modes, plan, clinicName: document.getElementById("clinicName").value };
+  const payload = { modes, plan, menu, clinicName: document.getElementById("clinicName").value };
   try {
     const res = await fetch(`${API_BASE}/api/settings`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
     if (!res.ok) throw new Error("HTTP "+res.status);
@@ -837,9 +986,9 @@ async function loadClinicSettings() {
 }
 document.getElementById("saveClinicBtn").addEventListener("click", saveClinicSettings);
 document.getElementById("resetClinicBtn").addEventListener("click", () => {
-  if (!confirm("操作モード・治療工程の設定を既定に戻しますか？（保存するまで医院共通設定は変わりません）")) return;
-  modes = structuredClone(DEFAULT_MODES); plan = structuredClone(DEFAULT_PLAN); currentMode = "caries";
-  renderModeEditor(); renderPlanEditor(); refreshModeUI(); updateProcess();
+  if (!confirm("操作モード・治療工程・自費メニューの設定を既定に戻しますか？（保存するまで医院共通設定は変わりません）")) return;
+  modes = structuredClone(DEFAULT_MODES); plan = structuredClone(DEFAULT_PLAN); menu = structuredClone(DEFAULT_MENU); currentMode = "caries";
+  renderModeEditor(); renderPlanEditor(); renderMenuEditor(); refreshModeUI(); updateProcess();
   toast("設定を既定に戻しました");
 });
 
@@ -869,7 +1018,8 @@ function clearTeeth(){ initToothData(); renderAllTeeth(); updateProcess(); }
 async function saveData(){
   const patientId = getPatientId();
   if (!patientId){ toast("患者番号を入力してください", true); return; }
-  const payload = { patientId, toothData, savedAt: new Date().toISOString() };
+  if (document.getElementById("estName")) estimateData.patientName = document.getElementById("estName").value;
+  const payload = { patientId, toothData, estimate: estimateData, savedAt: new Date().toISOString() };
   try {
     const res = await fetch(`${API_BASE}/api/save`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
     if (!res.ok) throw new Error("HTTP "+res.status);
@@ -888,17 +1038,23 @@ async function loadData(){
   try {
     const res = await fetch(`${API_BASE}/api/load/${encodeURIComponent(patientId)}`);
     setConn(true);
-    if (res.status === 404){ clearTeeth(); toast(`新規患者（${patientId}）：初期状態にしました`); return; }
+    if (res.status === 404){ clearTeeth(); applyEstimate(null); toast(`新規患者（${patientId}）：初期状態にしました`); return; }
     if (!res.ok) throw new Error("HTTP "+res.status);
     const data = await res.json();
-    if (!data || !data.toothData){ clearTeeth(); toast(`新規患者（${patientId}）：初期状態にしました`); return; }
-    applyToothData(data.toothData); toast(`サーバーから読込みました（患者 ${patientId}）`);
+    if (!data || !data.toothData){ clearTeeth(); applyEstimate(null); toast(`新規患者（${patientId}）：初期状態にしました`); return; }
+    applyToothData(data.toothData); applyEstimate(data.estimate); toast(`サーバーから読込みました（患者 ${patientId}）`);
   } catch(err) {
     setConn(false);
     const backup = localStorage.getItem("dsp_"+patientId);
-    if (backup){ applyToothData(JSON.parse(backup).toothData); toast("サーバー接続不可：ローカルから復元しました", true); }
-    else { clearTeeth(); toast("データなし：初期状態にしました", true); }
+    if (backup){ const b = JSON.parse(backup); applyToothData(b.toothData); applyEstimate(b.estimate); toast("サーバー接続不可：ローカルから復元しました", true); }
+    else { clearTeeth(); applyEstimate(null); toast("データなし：初期状態にしました", true); }
   }
+}
+function applyEstimate(e){
+  estimateData = (e && Array.isArray(e.items)) ? JSON.parse(JSON.stringify(e)) : defaultEstimate();
+  if (typeof estimateData.taxRate !== "number") estimateData.taxRate = 10;
+  if (typeof estimateData.discount !== "number") estimateData.discount = 0;
+  if (!estModal.hidden) openEstimateModal(); // 開いていれば即反映
 }
 function applyToothData(src){
   initToothData();
@@ -926,7 +1082,144 @@ document.getElementById("printBtn").addEventListener("click", ()=>{
   setTimeout(()=> window.print(), 60);
 });
 
-/* ================= 接続状態 / トースト ================= */
+/* ================= 見積書（自費診療） ================= */
+const estModal = document.getElementById("estimateModal");
+function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function renderMenuSelect(){
+  const sel = document.getElementById("estMenuSel");
+  sel.innerHTML = menu.map((m,i)=>`<option value="${i}">${escapeHtml(m.name)}（${yen(m.unit)}）</option>`).join("")
+                  || `<option value="">（メニュー未登録）</option>`;
+}
+function estItemRow(it, idx){
+  return `<div class="est-item" data-idx="${idx}">
+    <div class="r1">
+      <input class="nm" type="text" data-k="name" value="${escAttr(it.name)}" placeholder="項目名（例：セラミッククラウン）">
+      <button class="est-del" data-k="del" title="削除">🗑</button>
+    </div>
+    <div class="r2">
+      <label class="f-bui">部位<input type="text" data-k="teeth" value="${escAttr(it.teeth||"")}" placeholder="例：上顎右6 / 全顎"></label>
+      <label class="f-num">単価(税込)<input type="number" data-k="unit" min="0" step="100" value="${Number(it.unit)||0}"></label>
+      <label class="f-num">数量<input type="number" data-k="qty" min="0" step="1" value="${Number(it.qty)||0}"></label>
+      <label class="f-num">小計<div class="sub" data-sub>${yen((Number(it.unit)||0)*(Number(it.qty)||0))}</div></label>
+    </div>
+    <textarea data-k="desc" placeholder="患者さん向けの説明文">${escapeHtml(it.desc||"")}</textarea>
+  </div>`;
+}
+function renderEstimateItems(){
+  const box = document.getElementById("estItems");
+  box.innerHTML = estimateData.items.length
+    ? estimateData.items.map(estItemRow).join("")
+    : `<div class="proc-empty" style="padding:14px;">「＋ 追加」で項目を入れてください。</div>`;
+  recalcEstimate();
+}
+function recalcEstimate(){
+  let sub = 0;
+  estimateData.items.forEach(it => sub += (Number(it.unit)||0)*(Number(it.qty)||0));
+  estimateData.taxRate = Number(document.getElementById("estTax").value)||0;
+  estimateData.discount = Number(document.getElementById("estDiscount").value)||0;
+  const total = Math.max(0, sub - estimateData.discount);
+  const taxIncl = Math.round(total - total/(1 + estimateData.taxRate/100));
+  document.getElementById("estSub").textContent = yen(sub);
+  document.getElementById("estTotal").textContent = yen(total);
+  document.getElementById("estTaxIncl").textContent = yen(taxIncl);
+  // 各行の小計表示を更新
+  document.querySelectorAll("#estItems .est-item").forEach(row=>{
+    const it = estimateData.items[+row.dataset.idx]; if(!it) return;
+    const el = row.querySelector("[data-sub]"); if (el) el.textContent = yen((Number(it.unit)||0)*(Number(it.qty)||0));
+  });
+}
+function openEstimateModal(){
+  document.getElementById("estName").value = estimateData.patientName || "";
+  document.getElementById("estChart").value = getPatientId() || "";
+  if (!document.getElementById("estDate").value) document.getElementById("estDate").value = todayISO();
+  document.getElementById("estTax").value = estimateData.taxRate;
+  document.getElementById("estDiscount").value = estimateData.discount;
+  document.getElementById("estNote").value = estimateData.note || "";
+  renderMenuSelect(); renderEstimateItems();
+  estModal.hidden = false;
+}
+function closeEstimateModal(){ estModal.hidden = true; }
+document.getElementById("estimateBtn").addEventListener("click", openEstimateModal);
+document.getElementById("closeEstimate").addEventListener("click", closeEstimateModal);
+estModal.addEventListener("click", e => { if (e.target === estModal) closeEstimateModal(); });
+document.getElementById("estAddMenu").addEventListener("click", ()=>{
+  const i = +document.getElementById("estMenuSel").value;
+  const src = menu[i]; if (!src) { toast("メニューが未登録です", true); return; }
+  estimateData.items.push({ name:src.name, teeth:"", unit:Number(src.unit)||0, qty:1, desc:src.desc||"" });
+  renderEstimateItems();
+});
+document.getElementById("estAddBlank").addEventListener("click", ()=>{
+  estimateData.items.push({ name:"", teeth:"", unit:0, qty:1, desc:"" });
+  renderEstimateItems();
+});
+document.getElementById("estItems").addEventListener("input", e=>{
+  const row = e.target.closest(".est-item"); if(!row) return;
+  const it = estimateData.items[+row.dataset.idx]; const k = e.target.dataset.k; if(!it||!k) return;
+  it[k] = (k==="unit"||k==="qty") ? (Number(e.target.value)||0) : e.target.value;
+  recalcEstimate();
+});
+document.getElementById("estItems").addEventListener("click", e=>{
+  const del = e.target.closest("[data-k='del']"); if(!del) return;
+  const row = e.target.closest(".est-item"); estimateData.items.splice(+row.dataset.idx,1); renderEstimateItems();
+});
+document.getElementById("estName").addEventListener("input", e=> estimateData.patientName = e.target.value);
+document.getElementById("estNote").addEventListener("input", e=> estimateData.note = e.target.value);
+document.getElementById("estTax").addEventListener("input", recalcEstimate);
+document.getElementById("estDiscount").addEventListener("input", recalcEstimate);
+document.addEventListener("keydown", e => { if (e.key==="Escape" && !estModal.hidden) closeEstimateModal(); });
+
+function renderEstimateDoc(){
+  let sub = 0; estimateData.items.forEach(it=> sub += (Number(it.unit)||0)*(Number(it.qty)||0));
+  const total = Math.max(0, sub - (Number(estimateData.discount)||0));
+  const rate = Number(estimateData.taxRate)||0;
+  const taxIncl = Math.round(total - total/(1+rate/100));
+  const clinic = document.getElementById("clinicName").value || "";
+  const name = (document.getElementById("estName").value || "").trim();
+  const chart = document.getElementById("estChart").value || "";
+  const dv = document.getElementById("estDate").value; const d = dv ? new Date(dv) : new Date();
+  const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  const rows = estimateData.items.filter(it => (it.name||"").trim() || it.unit || it.qty).map((it,i)=>`
+    <tr>
+      <td class="num">${i+1}</td>
+      <td><div class="ed-nm">${escapeHtml(it.name||"")}</div>${it.desc?`<div class="ed-ds">${escapeHtml(it.desc)}</div>`:""}</td>
+      <td>${escapeHtml(it.teeth||"")}</td>
+      <td class="num">${yen(it.unit)}</td>
+      <td class="num">${Number(it.qty)||0}</td>
+      <td class="num">${yen((Number(it.unit)||0)*(Number(it.qty)||0))}</td>
+    </tr>`).join("");
+  document.getElementById("estimateDoc").innerHTML = `
+    <div class="ed-title">御 見 積 書</div>
+    <div class="ed-clinic">${escapeHtml(clinic)}</div>
+    <div class="ed-top">
+      <div><div class="ed-patient">${escapeHtml(name||"　")} 様</div>
+        <div class="ed-sub">${chart?`カルテ番号：${escapeHtml(chart)}　`:""}下記のとおりお見積り申し上げます。</div></div>
+      <div style="text-align:right;font-size:13px;">作成日：${dateStr}</div>
+    </div>
+    <table class="ed-tb">
+      <thead><tr><th style="width:34px;">#</th><th>項目・内容</th><th style="width:120px;">部位</th><th style="width:92px;">単価</th><th style="width:48px;">数量</th><th style="width:104px;">金額</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="6" style="text-align:center;color:#888;">（項目なし）</td></tr>`}</tbody>
+    </table>
+    <table class="ed-sums">
+      <tr><td class="lbl">小計</td><td class="val">${yen(sub)}</td></tr>
+      ${estimateData.discount?`<tr><td class="lbl">値引き</td><td class="val">− ${yen(estimateData.discount)}</td></tr>`:""}
+      <tr class="grand"><td class="lbl">合計金額（税込）</td><td class="val">${yen(total)}</td></tr>
+      <tr><td class="lbl" style="font-size:11px;color:#777;">うち消費税（${rate}%）</td><td class="val" style="font-size:12px;color:#777;">${yen(taxIncl)}</td></tr>
+    </table>
+    ${estimateData.note?`<div class="ed-note"><b>備考</b>${escapeHtml(estimateData.note)}</div>`:""}
+    <div class="ed-foot">※ 本見積は自費（保険外）診療の概算です。有効期限内でも、診査・診断により治療内容・金額が変更となる場合があります。表示金額は税込です。</div>`;
+}
+function printEstimate(){
+  if (!estimateData.items.some(it=>(it.name||"").trim())) { toast("項目を1つ以上入力してください", true); return; }
+  renderEstimateDoc();
+  document.body.classList.add("print-estimate");
+  const done = ()=>{ document.body.classList.remove("print-estimate"); window.removeEventListener("afterprint", done); };
+  window.addEventListener("afterprint", done);
+  setTimeout(()=> window.print(), 60);
+  setTimeout(done, 1500); // afterprint が来ない環境の保険
+}
+document.getElementById("estPrint").addEventListener("click", printEstimate);
+document.getElementById("estSave").addEventListener("click", ()=> saveData(true));
+
 function setConn(online){
   document.getElementById("connDot").className = "dot " + (online?"online":"offline");
   document.getElementById("connText").textContent = online ? "サーバー接続中" : "オフライン（ローカル保存）";
@@ -947,7 +1240,7 @@ function initChartImage(){
 async function init(){
   initToothData();
   await loadClinicSettings();   // 医院共通設定を反映
-  renderModeButtons(); renderModeEditor(); renderPlanEditor(); renderLegend();
+  renderModeButtons(); renderModeEditor(); renderPlanEditor(); renderMenuEditor(); renderLegend();
   buildOverlay(); initChartImage(); renderAllTeeth(); updateProcess();
 }
 init();

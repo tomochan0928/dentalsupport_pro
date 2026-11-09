@@ -125,7 +125,7 @@ Safari で `http://（サーバーIP）:3000` を開き、「共有」→「ホ�
 | メソッド | パス | 説明 |
 |---|---|---|
 | GET | `/api/health` | 疎通確認 |
-| POST | `/api/save` | 患者データ `{ patientId, toothData }` を保存 |
+| POST | `/api/save` | 患者データ `{ patientId, toothData, estimate }` を保存（見積書も同じ患者ファイルに保存） |
 | GET | `/api/load/:patientId` | 患者データを取得（無ければ404→新規扱い） |
 | POST | `/api/settings` | 医院共通設定 `{ modes, plan, clinicName }` を保存 |
 | GET | `/api/settings` | 医院共通設定を取得（無ければ404→既定を使用） |

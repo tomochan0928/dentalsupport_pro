@@ -59,6 +59,21 @@
   .est-tot input { width:92px !important; display:inline-block; border:1px solid var(--line); border-radius:6px; padding:4px 6px; text-align:right; font:inherit; }
   .est-tot .row > span:last-child { white-space:nowrap; }
   .estimate-doc { display:none; }
+  .lib-panel { margin-top:10px; border:1px solid #bfe6f2; border-radius:9px; background:#f6fbfd; padding:10px; }
+  .lib-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; color:var(--accent-dark); }
+  .lib-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:10px; }
+  .lib-tile { border:1px solid var(--line); border-radius:8px; background:#fff; overflow:hidden; display:flex; flex-direction:column; }
+  .lib-tile.pick { cursor:pointer; } .lib-tile.pick:hover { border-color:var(--accent); box-shadow:0 0 0 2px #bfe6f2; }
+  .lib-tile img { width:100%; height:88px; object-fit:cover; display:block; background:#eef4f8; }
+  .lib-tile .cap { font-size:11.5px; padding:5px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lib-tile .ops { display:flex; gap:4px; padding:5px; }
+  .lib-tile .ops input { flex:1; min-width:0; border:1px solid var(--line); border-radius:5px; padding:4px 5px; font:inherit; font-size:11.5px; }
+  .lib-up { border:2px dashed #9cc7d8; border-radius:8px; min-height:126px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:700; color:var(--accent-dark); cursor:pointer; background:#f6fbfd; }
+  .lib-empty { grid-column:1/-1; font-size:12px; color:var(--text-soft); padding:6px; }
+  .note-row { display:flex; gap:6px; align-items:flex-start; margin-bottom:6px; }
+  .note-row textarea { flex:1; min-height:40px; border:1px solid var(--line); border-radius:6px; padding:6px; font:inherit; resize:vertical; }
+  #estNoteSel { flex:1; min-width:160px; border:1px solid var(--line); border-radius:7px; padding:7px; font:inherit; }
+  .est-photo .psave { right:auto; left:4px; }
   .tp-tog { border:1px solid var(--line); background:#fff; border-radius:7px; padding:7px 10px; font:inherit; font-size:12.5px; cursor:pointer; text-align:left; width:100%; color:var(--text); }
   .tp-tog b { color:var(--accent-dark); }
   .tp { margin-top:7px; padding:8px; border:1px dashed #bcd3df; border-radius:8px; background:#f6fbfd; }
@@ -74,7 +89,7 @@
   .est-photo { position:relative; width:150px; height:110px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#eef4f8; }
   .est-photo img { width:100%; height:100%; object-fit:cover; }
   .est-photo button { position:absolute; top:4px; right:4px; border:none; border-radius:6px; background:rgba(0,0,0,.55); color:#fff; cursor:pointer; padding:3px 7px; }
-  .est-photo-add { width:150px; height:110px; border:2px dashed #9cc7d8; border-radius:8px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:700; color:var(--accent-dark); cursor:pointer; background:#f6fbfd; }
+  .est-photo-add { width:150px; height:110px; border:2px dashed #9cc7d8; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:700; color:var(--accent-dark); cursor:pointer; background:#f6fbfd; }
   .menu-row { border:1px solid var(--line); border-radius:8px; padding:8px; margin-bottom:8px; background:#fff; display:grid; grid-template-columns:1fr 104px 40px; gap:6px; align-items:center; }
   .menu-row textarea { grid-column:1 / -1; min-height:34px; resize:vertical; }
   .menu-row input, .menu-row textarea { border:1px solid var(--line); border-radius:6px; padding:6px; font:inherit; box-sizing:border-box; width:100%; }
@@ -384,6 +399,21 @@
       </div>
 
       <div class="seg">
+        <div class="seg-title">📝 備考の定型文
+          <button class="btn ghost" id="addNoteBtn" style="padding:5px 9px;font-size:12px;">＋ 定型文追加</button>
+        </div>
+        <p class="hint">見積書の備考欄で選んで挿入できる文章です。変更後「💾 医院共通設定を保存」で保存されます。</p>
+        <div id="noteEditor"></div>
+      </div>
+
+      <div class="seg">
+        <div class="seg-title">📷 説明写真ライブラリ</div>
+        <p class="hint">よく使う説明用の写真・画像を登録しておくと、見積書でタップするだけで選べます。サーバーPCに保存され全端末で共有されます（登録・削除・名前変更はすぐに反映）。</p>
+        <div class="lib-grid" id="libManage"></div>
+        <input type="file" id="libFile" accept="image/*" multiple hidden>
+      </div>
+
+      <div class="seg">
         <div class="seg-title">🔄 アプリの更新（アップデート）</div>
         <p class="hint">新しい画面ファイル <b>index.html</b> を受け取ったら、ここで選んで「更新する」を押すだけ。サーバーPCのファイルを直接触らなくても、この画面から更新できます。更新後は各端末でページを再読み込みしてください。</p>
         <input type="file" id="updateFile" accept=".html,text/html" />
@@ -430,11 +460,21 @@
       <div class="seg" style="margin-top:12px;">
         <div class="seg-title">📷 説明写真（最大3枚・印刷されます）</div>
         <div class="est-photos" id="estPhotos"></div>
+        <div class="lib-panel" id="estLib" hidden>
+          <div class="lib-head"><b>📁 保存済みの写真から選ぶ（タップで追加）</b><button class="btn ghost" id="estLibClose" style="flex:none;padding:5px 10px;">閉じる</button></div>
+          <div class="lib-grid" id="estLibGrid"></div>
+        </div>
         <input type="file" id="estPhotoFile" accept="image/*" hidden>
       </div>
 
       <div class="seg" style="margin-top:12px;">
         <div class="seg-title">備考</div>
+        <div class="est-addrow" style="margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--accent-dark);">定型文：</span>
+          <select id="estNoteSel"></select>
+          <button class="btn" id="estNoteIns" style="flex:none;padding:8px 12px;">＋ 挿入</button>
+          <button class="btn ghost" id="estNoteSave" style="flex:none;padding:8px 12px;">☆ 今の備考を登録</button>
+        </div>
         <textarea id="estNote" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:7px;padding:8px;font:inherit;box-sizing:border-box;" placeholder="例：調整料として1回5,500円かかります（月1回程度）。装着後5年間保証します。"></textarea>
       </div>
 
@@ -512,6 +552,13 @@ const DEFAULT_MENU = [
   { name:"インプラント（1歯）",          unit:440000, desc:"人工歯根を埋入し被せ物を装着する治療一式です（1歯）。" },
   { name:"ファイバーコア（支台築造）",    unit:11000,  desc:"被せ物の土台を補強するファイバー製の芯です（1歯）。" }
 ];
+/* 備考の定型文（医院共通設定で編集可） */
+const DEFAULT_NOTES = [
+  "調整料として1回5,500円かかります（月に1回程度）。",
+  "装着後5年間の保証があります（定期検診の受診が条件となります）。",
+  "お支払いは現金・クレジットカード・デンタルローンがご利用いただけます。",
+  "本見積の有効期限は発行日より3か月です。"
+];
 function defaultEstimate(){ return { patientName:"", items:[], taxRate:10, discount:0, note:"", photos:[] }; }
 const yen = n => "¥" + (Math.round(Number(n)||0)).toLocaleString("ja-JP");
 
@@ -519,6 +566,8 @@ let modes = structuredClone(DEFAULT_MODES);
 let plan  = structuredClone(DEFAULT_PLAN);
 let menu  = structuredClone(DEFAULT_MENU);
 let estimateData = defaultEstimate();
+let noteTemplates = structuredClone(DEFAULT_NOTES);
+let photoLib = []; // 説明写真ライブラリ（サーバーから取得。null=未接続）
 let currentMode = "caries";
 let activeGroup = "problem";
 let toothData = {};
@@ -830,7 +879,7 @@ function updateProcess() {
 /* ================= 設定パネル ================= */
 /* 設定モーダル：歯車「⚙設定」で開閉 */
 const settingsModal = document.getElementById("settingsModal");
-function openSettingsModal(){ settingsModal.hidden = false; }
+function openSettingsModal(){ settingsModal.hidden = false; refreshLibManage(); }
 function closeSettingsModal(){ settingsModal.hidden = true; }
 document.getElementById("openSettings").addEventListener("click", openSettingsModal);
 document.getElementById("closeSettings").addEventListener("click", closeSettingsModal);
@@ -992,16 +1041,17 @@ function mergeDefaultModes() {
 function applyClinicSettings(s) {
   if (s && Array.isArray(s.modes) && s.plan) { modes = structuredClone(s.modes); plan = structuredClone(s.plan); }
   if (s && Array.isArray(s.menu)) menu = structuredClone(s.menu);
+  if (s && Array.isArray(s.notes)) noteTemplates = s.notes.slice();
   mergeDefaultModes();
   ensureGroups();
   if (s && typeof s.clinicName === "string") document.getElementById("clinicName").value = s.clinicName;
   if (s && typeof s.clinicAddress === "string") document.getElementById("clinicAddress").value = s.clinicAddress;
   if (s && typeof s.clinicTel === "string") document.getElementById("clinicTel").value = s.clinicTel;
   if (!modeById(currentMode)) currentMode = modes[0].id;
-  renderMenuEditor();
+  renderMenuEditor(); renderNoteEditor();
 }
 async function saveClinicSettings() {
-  const payload = { modes, plan, menu, clinicName: document.getElementById("clinicName").value, clinicAddress: document.getElementById("clinicAddress").value, clinicTel: document.getElementById("clinicTel").value };
+  const payload = { modes, plan, menu, notes: noteTemplates, clinicName: document.getElementById("clinicName").value, clinicAddress: document.getElementById("clinicAddress").value, clinicTel: document.getElementById("clinicTel").value };
   try {
     const res = await fetch(`${API_BASE}/api/settings`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
     if (!res.ok) throw new Error("HTTP "+res.status);
@@ -1028,8 +1078,8 @@ async function loadClinicSettings() {
 document.getElementById("saveClinicBtn").addEventListener("click", saveClinicSettings);
 document.getElementById("resetClinicBtn").addEventListener("click", () => {
   if (!confirm("操作モード・治療工程・自費メニューの設定を既定に戻しますか？（保存するまで医院共通設定は変わりません）")) return;
-  modes = structuredClone(DEFAULT_MODES); plan = structuredClone(DEFAULT_PLAN); menu = structuredClone(DEFAULT_MENU); currentMode = "caries";
-  renderModeEditor(); renderPlanEditor(); renderMenuEditor(); refreshModeUI(); updateProcess();
+  modes = structuredClone(DEFAULT_MODES); plan = structuredClone(DEFAULT_PLAN); menu = structuredClone(DEFAULT_MENU); noteTemplates = structuredClone(DEFAULT_NOTES); currentMode = "caries";
+  renderModeEditor(); renderPlanEditor(); renderMenuEditor(); renderNoteEditor(); refreshModeUI(); updateProcess();
   toast("設定を既定に戻しました");
 });
 
@@ -1240,7 +1290,8 @@ function openEstimateModal(){
   document.getElementById("estDiscount").value = estimateData.discount;
   document.getElementById("estNote").value = estimateData.note || "";
   if (!Array.isArray(estimateData.photos)) estimateData.photos = [];
-  renderMenuSelect(); renderEstimateItems(); renderEstPhotos();
+  renderMenuSelect(); renderNoteSelect(); renderEstimateItems(); renderEstPhotos();
+  document.getElementById("estLib").hidden = true;
   estModal.hidden = false;
 }
 function closeEstimateModal(){ estModal.hidden = true; }
@@ -1293,8 +1344,8 @@ document.addEventListener("keydown", e => { if (e.key==="Escape" && !estModal.hi
 /* 説明写真（最大3枚・縮小してJPEG化） */
 function renderEstPhotos(){
   const box = document.getElementById("estPhotos"); const ph = estimateData.photos || [];
-  box.innerHTML = ph.map((src,i)=>`<div class="est-photo"><img src="${src}" alt="説明写真${i+1}"><button type="button" data-pdel="${i}" title="削除">✕</button></div>`).join("")
-    + (ph.length < 3 ? `<div class="est-photo-add" data-padd>＋ 写真を追加<br><span style="font-weight:400;font-size:11px;">（撮影 / 選択）</span></div>` : "");
+  box.innerHTML = ph.map((src,i)=>`<div class="est-photo"><img src="${src}" alt="説明写真${i+1}"><button type="button" class="psave" data-psave="${i}" title="ライブラリに登録">☆</button><button type="button" data-pdel="${i}" title="削除">✕</button></div>`).join("")
+    + (ph.length < 3 ? `<div class="est-photo-add" data-plib>📁 保存済みから<br>選ぶ</div><div class="est-photo-add" data-padd>📷 撮影 / ファイル<br><span style="font-weight:400;font-size:11px;">から追加</span></div>` : "");
 }
 function loadImageScaled(file, max){
   return new Promise((resolve, reject) => {
@@ -1314,6 +1365,9 @@ function loadImageScaled(file, max){
 }
 document.getElementById("estPhotos").addEventListener("click", e => {
   if (e.target.closest("[data-padd]")) { document.getElementById("estPhotoFile").click(); return; }
+  if (e.target.closest("[data-plib]")) { openEstLib(); return; }
+  const sv = e.target.closest("[data-psave]");
+  if (sv) { savePhotoToLib(estimateData.photos[+sv.dataset.psave]); return; }
   const del = e.target.closest("[data-pdel]");
   if (del) { estimateData.photos.splice(+del.dataset.pdel, 1); renderEstPhotos(); }
 });
@@ -1324,6 +1378,112 @@ document.getElementById("estPhotoFile").addEventListener("change", async e => {
     const url = await loadImageScaled(f, 1280);
     (estimateData.photos = estimateData.photos || []).push(url); renderEstPhotos();
   } catch (err) { toast("写真を読み込めませんでした", true); }
+});
+
+/* ================= 備考の定型文 ================= */
+function renderNoteSelect(){
+  const sel = document.getElementById("estNoteSel");
+  sel.innerHTML = noteTemplates.length
+    ? noteTemplates.map((t,i)=>`<option value="${i}">${escapeHtml(t.length>40 ? t.slice(0,40)+"…" : t)}</option>`).join("")
+    : `<option value="">（定型文が未登録です）</option>`;
+}
+function renderNoteEditor(){
+  const box = document.getElementById("noteEditor"); if (!box) return;
+  box.innerHTML = noteTemplates.map((t,i)=>`<div class="note-row" data-idx="${i}"><textarea data-k="text" placeholder="定型文">${escapeHtml(t)}</textarea><button class="est-del" data-k="del" title="削除">🗑</button></div>`).join("")
+    || `<p class="hint">（定型文なし）</p>`;
+}
+document.getElementById("noteEditor").addEventListener("input", e=>{
+  const row = e.target.closest(".note-row"); if (row) noteTemplates[+row.dataset.idx] = e.target.value;
+});
+document.getElementById("noteEditor").addEventListener("click", e=>{
+  if (!e.target.closest("[data-k='del']")) return;
+  noteTemplates.splice(+e.target.closest(".note-row").dataset.idx, 1); renderNoteEditor();
+});
+document.getElementById("addNoteBtn").addEventListener("click", ()=>{ noteTemplates.push(""); renderNoteEditor(); });
+document.getElementById("estNoteIns").addEventListener("click", ()=>{
+  const t = noteTemplates[+document.getElementById("estNoteSel").value]; if (!t) return;
+  const ta = document.getElementById("estNote");
+  ta.value = ta.value.trim() ? ta.value.replace(/\s+$/,"") + "\n" + t : t;
+  estimateData.note = ta.value;
+});
+document.getElementById("estNoteSave").addEventListener("click", ()=>{
+  const t = document.getElementById("estNote").value.trim();
+  if (!t) { toast("備考が空です", true); return; }
+  if (noteTemplates.includes(t)) { toast("同じ定型文が登録済みです"); return; }
+  noteTemplates.push(t); renderNoteSelect(); renderNoteEditor();
+  saveClinicSettings(); // 医院共通設定へ保存
+});
+
+/* ================= 説明写真ライブラリ ================= */
+async function fetchPhotoLib(){
+  try { const r = await fetch(`${API_BASE}/api/photos`); if (!r.ok) throw new Error(); photoLib = await r.json(); }
+  catch (e) { photoLib = null; }
+}
+const LIB_OFFLINE = `<div class="lib-empty">サーバーに接続していないため利用できません（サーバーPCで起動中か確認してください）。</div>`;
+async function openEstLib(){
+  const panel = document.getElementById("estLib"), grid = document.getElementById("estLibGrid");
+  panel.hidden = false; grid.innerHTML = `<div class="lib-empty">読み込み中…</div>`;
+  await fetchPhotoLib();
+  if (photoLib === null) { grid.innerHTML = LIB_OFFLINE; return; }
+  grid.innerHTML = photoLib.length
+    ? photoLib.map(p=>`<div class="lib-tile pick" data-lpick="${escAttr(p.id)}"><img src="${API_BASE}${p.url}" loading="lazy" alt=""><div class="cap">${escapeHtml(p.name)}</div></div>`).join("")
+    : `<div class="lib-empty">登録された写真がありません。「⚙設定 → 📷 説明写真ライブラリ」で登録できます。</div>`;
+}
+document.getElementById("estLibClose").addEventListener("click", ()=> document.getElementById("estLib").hidden = true);
+function blobToDataURL(b){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(b); }); }
+document.getElementById("estLibGrid").addEventListener("click", async e=>{
+  const t = e.target.closest("[data-lpick]"); if (!t) return;
+  estimateData.photos = estimateData.photos || [];
+  if (estimateData.photos.length >= 3) { toast("説明写真は3枚までです", true); return; }
+  const p = (photoLib||[]).find(x => x.id === t.dataset.lpick); if (!p) return;
+  try {
+    const r = await fetch(`${API_BASE}${p.url}`); if (!r.ok) throw new Error();
+    estimateData.photos.push(await blobToDataURL(await r.blob())); // 見積に写しを保存（ライブラリ削除後も残る）
+    renderEstPhotos();
+    if (estimateData.photos.length >= 3) document.getElementById("estLib").hidden = true;
+  } catch (err) { toast("写真を読み込めませんでした", true); }
+});
+async function uploadToLib(dataUrl, name){
+  const r = await fetch(`${API_BASE}/api/photos`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, data: dataUrl }) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+}
+async function savePhotoToLib(dataUrl){
+  if (!dataUrl) return;
+  const name = prompt("ライブラリに登録する名前", "説明写真"); if (name === null) return;
+  try { await uploadToLib(dataUrl, name || "説明写真"); toast("説明写真ライブラリに登録しました"); }
+  catch (e) { toast("登録できませんでした（サーバー未接続の可能性）", true); }
+}
+async function refreshLibManage(){
+  const box = document.getElementById("libManage"); if (!box) return;
+  await fetchPhotoLib();
+  if (photoLib === null) { box.innerHTML = LIB_OFFLINE; return; }
+  box.innerHTML = photoLib.map(p=>`<div class="lib-tile" data-lid="${escAttr(p.id)}"><img src="${API_BASE}${p.url}" loading="lazy" alt="">
+      <div class="ops"><input type="text" data-lname value="${escAttr(p.name)}" title="名前（変更すると保存）"><button class="est-del" data-ldel title="削除">🗑</button></div></div>`).join("")
+    + `<div class="lib-up" data-lup>＋ 写真を登録<br><span style="font-weight:400;font-size:11px;">（複数選択可）</span></div>`;
+}
+document.getElementById("libManage").addEventListener("click", async e=>{
+  if (e.target.closest("[data-lup]")) { document.getElementById("libFile").click(); return; }
+  const del = e.target.closest("[data-ldel]"); if (!del) return;
+  const id = del.closest("[data-lid]").dataset.lid;
+  if (!confirm("この写真をライブラリから削除しますか？（作成済みの見積書の写真は消えません）")) return;
+  try { await fetch(`${API_BASE}/api/photos/${encodeURIComponent(id)}/delete`, { method:"POST" }); } catch (err) {}
+  refreshLibManage();
+});
+document.getElementById("libManage").addEventListener("change", async e=>{
+  const inp = e.target.closest("[data-lname]"); if (!inp) return;
+  const id = inp.closest("[data-lid]").dataset.lid;
+  try { await fetch(`${API_BASE}/api/photos/${encodeURIComponent(id)}/rename`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name: inp.value }) }); toast("名前を変更しました"); }
+  catch (err) { toast("変更できませんでした", true); }
+});
+document.getElementById("libFile").addEventListener("change", async e=>{
+  const files = Array.from(e.target.files || []); e.target.value = "";
+  let ok = 0;
+  for (const f of files) {
+    try { await uploadToLib(await loadImageScaled(f, 1280), f.name.replace(/\.[^.]+$/, "")); ok++; }
+    catch (err) { toast(`「${f.name}」を登録できませんでした`, true); }
+  }
+  if (ok) toast(`${ok}枚を登録しました`);
+  refreshLibManage();
 });
 
 function renderEstimateDoc(){
@@ -1393,7 +1553,7 @@ function initChartImage(){
 async function init(){
   initToothData();
   await loadClinicSettings();   // 医院共通設定を反映
-  renderModeButtons(); renderModeEditor(); renderPlanEditor(); renderMenuEditor(); renderLegend();
+  renderModeButtons(); renderModeEditor(); renderPlanEditor(); renderMenuEditor(); renderNoteEditor(); renderLegend();
   buildOverlay(); initChartImage(); renderAllTeeth(); updateProcess();
 }
 init();

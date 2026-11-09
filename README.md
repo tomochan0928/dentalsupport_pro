@@ -129,6 +129,10 @@ Safari で `http://（サーバーIP）:3000` を開き、「共有」→「ホ�
 | GET | `/api/load/:patientId` | 患者データを取得（無ければ404→新規扱い） |
 | POST | `/api/settings` | 医院共通設定 `{ modes, plan, clinicName }` を保存 |
 | GET | `/api/settings` | 医院共通設定を取得（無ければ404→既定を使用） |
+| GET | `/api/photos` | 説明写真ライブラリの一覧（`data/photos/`） |
+| GET | `/api/photos/:id` | 説明写真の画像（JPEG） |
+| POST | `/api/photos` | 写真を登録 `{ name, data: dataURL }` |
+| POST | `/api/photos/:id/rename` ・ `/delete` | 名前変更・削除 |
 | POST | `/api/update-ui` | 新しい `index.html` 本文を受け取り exe の隣に書き込む（画面の更新。直前版は `index.html.bak` に退避） |
 
 ## 初期工程表データ

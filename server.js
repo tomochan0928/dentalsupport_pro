@@ -107,6 +107,65 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ===== 説明写真ライブラリ（data/photos/ に JPEG 保存・全端末で共有） =====
+  if (pathname === "/api/photos" || pathname.startsWith("/api/photos/")) {
+    const PHOTO_DIR = path.join(DATA_DIR, "photos");
+    const INDEX = path.join(PHOTO_DIR, "_index.json");
+    if (!fs.existsSync(PHOTO_DIR)) fs.mkdirSync(PHOTO_DIR, { recursive: true });
+    const readIndex = () => { try { return JSON.parse(fs.readFileSync(INDEX, "utf-8")); } catch (e) { return []; } };
+    const writeIndex = (list) => fs.writeFileSync(INDEX, JSON.stringify(list, null, 2), "utf-8");
+    const sub = pathname.replace(/^\/api\/photos\/?/, "");
+    // 一覧
+    if (req.method === "GET" && sub === "") {
+      return sendJson(res, 200, readIndex().map(p => ({ id: p.id, name: p.name, url: "/api/photos/" + p.id })));
+    }
+    // 画像本体
+    if (req.method === "GET" && sub) {
+      const id = safeId(sub), file = path.join(PHOTO_DIR, id + ".jpg");
+      if (!id || !fs.existsSync(file)) { res.writeHead(404); return res.end("Not Found"); }
+      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "no-cache" });
+      return res.end(fs.readFileSync(file));
+    }
+    // 登録 { name, data: "data:image/jpeg;base64,..." }
+    if (req.method === "POST" && sub === "") {
+      let body = "", tooBig = false;
+      req.on("data", c => { body += c; if (body.length > 1.5e7) { tooBig = true; req.destroy(); } });
+      req.on("end", () => {
+        if (tooBig) return sendJson(res, 413, { ok: false, error: "too large" });
+        try {
+          const { name, data } = JSON.parse(body);
+          const m = /^data:image\/(jpeg|jpg|png);base64,(.+)$/.exec(String(data || ""));
+          if (!m) return sendJson(res, 400, { ok: false, error: "invalid image" });
+          const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          fs.writeFileSync(path.join(PHOTO_DIR, id + ".jpg"), Buffer.from(m[2], "base64"));
+          const list = readIndex(); list.push({ id, name: String(name || "写真").slice(0, 60), created: new Date().toISOString() }); writeIndex(list);
+          return sendJson(res, 200, { ok: true, id, url: "/api/photos/" + id });
+        } catch (e) { return sendJson(res, 400, { ok: false, error: "invalid JSON" }); }
+      });
+      return;
+    }
+    // 削除 POST /api/photos/<id>/delete
+    if (req.method === "POST" && /\/delete$/.test(sub)) {
+      const id = safeId(sub.replace(/\/delete$/, ""));
+      const list = readIndex().filter(p => p.id !== id); writeIndex(list);
+      try { fs.unlinkSync(path.join(PHOTO_DIR, id + ".jpg")); } catch (e) {}
+      return sendJson(res, 200, { ok: true });
+    }
+    // 名前変更 POST /api/photos/<id>/rename { name }
+    if (req.method === "POST" && /\/rename$/.test(sub)) {
+      const id = safeId(sub.replace(/\/rename$/, ""));
+      let body = ""; req.on("data", c => { body += c; if (body.length > 1e4) req.destroy(); });
+      req.on("end", () => {
+        try { const { name } = JSON.parse(body); const list = readIndex(); const p = list.find(x => x.id === id);
+          if (p) { p.name = String(name || "").slice(0, 60); writeIndex(list); }
+          return sendJson(res, 200, { ok: true });
+        } catch (e) { return sendJson(res, 400, { ok: false }); }
+      });
+      return;
+    }
+    return sendJson(res, 404, { ok: false, error: "not found" });
+  }
+
   // 保存
   if (req.method === "POST" && pathname === "/api/save") {
     let body = "";

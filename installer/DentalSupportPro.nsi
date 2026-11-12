@@ -23,6 +23,7 @@ RequestExecutionLevel admin
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DentalSupportPro"
 !define REGKEY    "Software\DentalSupportPro"
 !define FWRULE    "DentalSupport Pro (TCP 3000)"
+!define TASKNAME  "DentalSupport Pro Server"
 
 Name "${APPNAME}"
 Caption "${APPNAME} セットアップ（サーバーPC用） v${VERSION}"
@@ -84,10 +85,13 @@ Section "!${APPNAME} 本体（必須）" SecCore
   nsExec::Exec 'taskkill /IM ${EXENAME} /F'
   Sleep 1200
 
-  ; 旧「zip版」で作られた自動起動（ユーザーのスタートアップ）を解除
+  ; 以前の自動起動設定をいったん解除（選択された項目で作り直す）
   SetShellVarContext current
   Delete "$SMSTARTUP\${APPNAME}.lnk"
   SetShellVarContext all
+  Delete "$SMSTARTUP\${APPNAME}.lnk"
+  Delete "$SMSTARTUP\${APPNAME} サーバー.lnk"
+  nsExec::Exec 'schtasks /Delete /TN "${TASKNAME}" /F'
 
   SetOutPath "$INSTDIR"
   SetOverwrite on
@@ -143,9 +147,37 @@ Section "ファイアウォールを許可（推奨）" SecFirewall
   nsExec::ExecToLog 'netsh advfirewall firewall add rule name="${FWRULE}" dir=in action=allow protocol=TCP localport=3000'
 SectionEnd
 
-Section "PC起動時に自動起動（推奨）" SecAutostart
+Section "電源ON時にサーバー自動起動（推奨）" SecAutostart
+  ; タスクスケジューラに「起動時（ログイン不要）＋ログオン時」のタスクを登録。
+  ; schtasks /SC ONSTART だと既定で72時間で強制終了されるため、XMLで「時間制限なし・異常終了時は再起動」を指定する。
+  InitPluginsDir
+  FileOpen $0 "$PLUGINSDIR\dsp-task.xml" w
+  FileWriteUTF16LE /BOM $0 '<?xml version="1.0" encoding="UTF-16"?>$\r$\n'
+  FileWriteUTF16LE $0 '<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">$\r$\n'
+  FileWriteUTF16LE $0 '<RegistrationInfo><Description>DentalSupport Pro サーバーを電源ON時に起動（ログイン不要）</Description></RegistrationInfo>$\r$\n'
+  FileWriteUTF16LE $0 '<Triggers><BootTrigger><Enabled>true</Enabled></BootTrigger><LogonTrigger><Enabled>true</Enabled></LogonTrigger></Triggers>$\r$\n'
+  FileWriteUTF16LE $0 '<Principals><Principal id="Author"><UserId>S-1-5-18</UserId><RunLevel>HighestAvailable</RunLevel></Principal></Principals>$\r$\n'
+  FileWriteUTF16LE $0 '<Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><AllowHardTerminate>true</AllowHardTerminate><StartWhenAvailable>true</StartWhenAvailable><RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable><IdleSettings><StopOnIdleEnd>false</StopOnIdleEnd><RestartOnIdle>false</RestartOnIdle></IdleSettings><AllowStartOnDemand>true</AllowStartOnDemand><Enabled>true</Enabled><Hidden>false</Hidden><RunOnlyIfIdle>false</RunOnlyIfIdle><WakeToRun>false</WakeToRun><ExecutionTimeLimit>PT0S</ExecutionTimeLimit><Priority>7</Priority><RestartOnFailure><Interval>PT1M</Interval><Count>3</Count></RestartOnFailure></Settings>$\r$\n'
+  FileWriteUTF16LE $0 '<Actions Context="Author"><Exec><Command>$INSTDIR\${EXENAME}</Command><Arguments>--no-open</Arguments><WorkingDirectory>$INSTDIR</WorkingDirectory></Exec></Actions>$\r$\n'
+  FileWriteUTF16LE $0 '</Task>$\r$\n'
+  FileClose $0
+  nsExec::ExecToLog 'schtasks /Create /TN "${TASKNAME}" /XML "$PLUGINSDIR\dsp-task.xml" /F'
+  Pop $0
+  ${If} $0 == "0"
+    DetailPrint "電源ON時の自動起動を登録しました。サーバーを起動します..."
+    nsExec::Exec 'schtasks /Run /TN "${TASKNAME}"'
+    Sleep 3000
+  ${Else}
+    ; 登録できなかった場合は従来方式（ログオン時に起動）で代替
+    DetailPrint "タスク登録に失敗したため、ログオン時の自動起動で代替します。"
+    SetShellVarContext all
+    CreateShortCut "$SMSTARTUP\${APPNAME} サーバー.lnk" "$SYSDIR\wscript.exe" '"$INSTDIR\start-hidden.vbs"' "$INSTDIR\icon.ico" 0
+  ${EndIf}
+SectionEnd
+
+Section "ログイン時にアプリ画面を自動で開く" SecAutoOpen
   SetShellVarContext all
-  CreateShortCut "$SMSTARTUP\${APPNAME}.lnk" "$SYSDIR\wscript.exe" '"$INSTDIR\start-hidden.vbs"' "$INSTDIR\icon.ico" 0
+  CreateShortCut "$SMSTARTUP\${APPNAME}.lnk" "$SYSDIR\wscript.exe" '"$INSTDIR\launch.vbs" /logon' "$INSTDIR\icon.ico" 0
 SectionEnd
 
 Section "デスクトップにアイコンを作成" SecDesktop
@@ -156,7 +188,8 @@ SectionEnd
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecCore}      "サーバー本体・画面・スタートメニュー。患者データ（data）は上書きしません。"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecFirewall}  "ポート3000の受信を許可します。iPad・子パソコンから使うには必須です。"
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecAutostart} "ログオン時にサーバーを画面に出さずに自動起動します。毎朝の起動操作が不要になります。"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecAutostart} "PCの電源を入れるだけで、ログインしなくても裏でサーバーが起動します（iPad等からすぐ使えます）。"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecAutoOpen}  "このPCにログインしたとき、アプリの画面を自動で開きます。"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktop}   "デスクトップに「${APPNAME}」アイコンを作ります（サーバーが止まっていれば自動で起動して開きます）。"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -172,12 +205,15 @@ FunctionEnd
 ;  アンインストール
 ; ------------------------------------------------------------
 Section "Uninstall"
+  nsExec::Exec 'schtasks /End /TN "${TASKNAME}"'
+  nsExec::Exec 'schtasks /Delete /TN "${TASKNAME}" /F'
   nsExec::Exec 'taskkill /IM ${EXENAME} /F'
   Sleep 1000
   nsExec::Exec 'netsh advfirewall firewall delete rule name="${FWRULE}"'
 
   SetShellVarContext all
   Delete "$SMSTARTUP\${APPNAME}.lnk"
+  Delete "$SMSTARTUP\${APPNAME} サーバー.lnk"
   Delete "$DESKTOP\${APPNAME}.lnk"
   RMDir /r "$SMPROGRAMS\${APPNAME}"
   SetShellVarContext current

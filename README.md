@@ -60,11 +60,11 @@
 `dist/DentalSupportPro-Setup.exe` をサーバーPCでダブルクリックし、画面の案内どおり「次へ」を押すだけです（Windows 7 以降）。
 
 - インストール先は既定で `C:\DentalSupportPro`（患者データは `C:\DentalSupportPro\data`）
-- 選べる項目：**ファイアウォールの許可**（ポート3000）／**PC起動時の自動起動**／**デスクトップアイコン**
+- 選べる項目：**ファイアウォールの許可**（ポート3000）／**電源ON時にサーバー自動起動**（タスクスケジューラ・ログイン不要・時間制限なし）／**ログイン時にアプリ画面を自動で開く**／**デスクトップアイコン**
 - スタートメニュー「DentalSupport Pro」：開く・接続先アドレスを確認・サーバー起動／停止・ガイド・アンインストール
 - 上書きインストールでバージョンアップ可能（data は保持）。zip版の自動起動登録は自動で解除されます
 - アンインストールは「プログラムと機能」から（data を残すか確認されます）
-- ビルド：`npm install && npm run build:installer`（NSIS 3 の `makensis` が必要）
+- ビルド：`npm install && npm run build:installer`（NSIS 3 の `makensis` が必要。サーバー用と子パソコン用の両方を作成。子パソコン用の既定IPは環境変数 `DSP_DEFAULT_IP`）
 
 ### 方法A：実行ファイル版（推奨・Node.js不要・一番かんたん）
 
@@ -115,6 +115,11 @@ npm run build:win   # dist/DentalSupportPro.exe を生成（Windows 7対応 Node
 > Mac は「システム設定 → 一般 → ログイン項目」に `DentalSupportPro-mac` を追加すると同様に自動起動できます。
 
 ### 子パソコン（受付・診療室の端末）の導入
+
+**インストーラー（推奨）：** `dist/DentalSupportPro-Client-Setup.exe` を実行 → サーバーPCのIPを入力（その場で接続テスト）→ 完了。管理者権限は不要です。
+デスクトップのアイコンから Edge／Chrome のアプリ専用ウィンドウで開きます。IPが変わったらスタートメニュー「接続先を変更」。
+一括配布はサイレントで `DentalSupportPro-Client-Setup.exe /S /IP=192.168.128.201`。
+
 
 子パソコンは**サーバーに接続して使うだけ**なので、特別なソフトは不要です。配布物の `DentalSupportPro-Client`（`client-install.vbs` ほか）を使います。
 

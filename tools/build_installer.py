@@ -34,6 +34,20 @@ txt("installer/README-Install.txt", S("README.txt"))
 cp("docs/クイックガイド.pdf", S("Guide", "QuickGuide.pdf"))
 cp("docs/固定IP設定手順.pdf", S("Guide", "StaticIP-Setup.pdf"))
 
+# ---- 子パソコン用ステージ ----
+CSTAGE = os.path.join(DIST, "installer-stage-client")
+if os.path.exists(CSTAGE): shutil.rmtree(CSTAGE)
+os.makedirs(CSTAGE)
+C = lambda *p: os.path.join(CSTAGE, *p)
+cp("icon.ico", C("icon.ico"))
+cp("installer/wizard.bmp", C("wizard.bmp"))
+for f in ["open.vbs", "change-server.vbs"]:
+    vbs("installer/client/" + f, C(f))
+# check.vbs は英数字のみ（文字コードに依存せず動く）→ CRLF にしてそのまま同梱
+open(C("check.vbs"), "wb").write(rd("installer/client/check.vbs").replace("\r\n", "\n").replace("\n", "\r\n").encode("ascii"))
+txt("installer/client/README-Client.txt", C("README.txt"))
+DEFAULT_IP = os.environ.get("DSP_DEFAULT_IP", "192.168.128.201")
+
 out = os.path.join(DIST, "DentalSupportPro-Setup.exe")
 cmd = ["makensis", "-V2", "-INPUTCHARSET", "UTF8",
        f"-DVERSION={version}", f"-DSTAGE={STAGE}", f"-DOUTFILE={out}",
@@ -42,3 +56,12 @@ r = subprocess.run(cmd, capture_output=True, text=True)
 print(r.stdout[-3000:]); print(r.stderr[-3000:])
 if r.returncode != 0: sys.exit("makensis failed")
 print("built", out, round(os.path.getsize(out) / 1024 / 1024, 1), "MB  (v%s)" % version)
+
+cout = os.path.join(DIST, "DentalSupportPro-Client-Setup.exe")
+cmd = ["makensis", "-V2", "-INPUTCHARSET", "UTF8",
+       f"-DVERSION={version}", f"-DSTAGE={CSTAGE}", f"-DOUTFILE={cout}", f"-DDEFAULT_IP={DEFAULT_IP}",
+       os.path.join(REPO, "installer", "client", "DentalSupportPro-Client.nsi")]
+r = subprocess.run(cmd, capture_output=True, text=True)
+print(r.stdout[-3000:]); print(r.stderr[-3000:])
+if r.returncode != 0: sys.exit("makensis (client) failed")
+print("built", cout, round(os.path.getsize(cout) / 1024, 1), "KB  (v%s, default IP %s)" % (version, DEFAULT_IP))

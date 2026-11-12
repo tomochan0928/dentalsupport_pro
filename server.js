@@ -14,7 +14,7 @@
  *   GET/POST /api/settings     -> 医院共通設定
  *
  * データは（exe/server.js と同じ場所の）data/ に保存されます。
- *   環境変数 PORT で待受ポート、NO_OPEN=1 でブラウザ自動起動を抑止。
+ *   環境変数 PORT で待受ポート、NO_OPEN=1 または引数 --no-open でブラウザ自動起動を抑止。
  */
 const http = require("http");
 const fs = require("fs");
@@ -263,5 +263,6 @@ server.listen(PORT, HOST, () => {
   console.log("--------------------------------------------------");
   console.log("  ※ このウィンドウは開いたままにしてください（閉じると停止）");
   console.log("==================================================");
-  if (process.env.NO_OPEN !== "1") openBrowser(local);
+  // 自動起動（タスクスケジューラ）では --no-open を付けて起動する
+  if (process.env.NO_OPEN !== "1" && !process.argv.includes("--no-open")) openBrowser(local);
 });
